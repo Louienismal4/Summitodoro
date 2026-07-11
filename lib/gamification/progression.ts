@@ -8,8 +8,13 @@ import type {
 
 const XP_PER_LEVEL = 500;
 
+const profileNameSchema = z.string().trim().min(1).max(40);
+
 export const expeditionProfileSchema = z.object({
   version: z.literal(1),
+  displayName: profileNameSchema.default("Trailblazer"),
+  avatarUrl: z.string().url().nullable().default(null),
+  onboardingComplete: z.boolean().default(false),
   xp: z.number().int().nonnegative(),
   totalFocusMinutes: z.number().int().nonnegative(),
   completedSummits: z.number().int().nonnegative(),
@@ -19,6 +24,9 @@ export const expeditionProfileSchema = z.object({
 
 export const createExpeditionProfile = (): ExpeditionProfile => ({
   version: 1,
+  displayName: "Trailblazer",
+  avatarUrl: null,
+  onboardingComplete: false,
   xp: 0,
   totalFocusMinutes: 0,
   completedSummits: 0,
@@ -90,4 +98,22 @@ export const parseExpeditionProfile = (
   } catch {
     return null;
   }
+};
+
+export const sanitizeProfileIdentity = (
+  displayName: string,
+  avatarUrl: string | null,
+): Pick<
+  ExpeditionProfile,
+  "displayName" | "avatarUrl" | "onboardingComplete"
+> => {
+  const name = profileNameSchema.safeParse(displayName);
+  const avatar =
+    avatarUrl === null ? null : z.string().url().safeParse(avatarUrl);
+
+  return {
+    displayName: name.success ? name.data : "Trailblazer",
+    avatarUrl: avatar && avatar.success ? avatar.data : null,
+    onboardingComplete: true,
+  };
 };

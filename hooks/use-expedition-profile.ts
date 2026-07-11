@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   awardCompletedSession,
@@ -8,6 +8,7 @@ import {
   createExpeditionProfile,
   getLevelProgress,
   parseExpeditionProfile,
+  sanitizeProfileIdentity,
 } from "@/lib/gamification/progression";
 import type { FocusSession } from "@/types/session";
 
@@ -62,6 +63,16 @@ export const useExpeditionProfile = (
     [reachedCheckpointCount, session.durationMs],
   );
 
+  const updateIdentity = useCallback(
+    (displayName: string, avatarUrl: string | null) => {
+      setProfile((current) => ({
+        ...current,
+        ...sanitizeProfileIdentity(displayName, avatarUrl),
+      }));
+    },
+    [],
+  );
+
   return useMemo(
     () => ({
       profile,
@@ -69,7 +80,8 @@ export const useExpeditionProfile = (
       level: getLevelProgress(profile.xp),
       lastReward: session.status === "completed" ? projectedReward : null,
       projectedReward,
+      updateIdentity,
     }),
-    [hydrated, profile, projectedReward, session.status],
+    [hydrated, profile, projectedReward, session.status, updateIdentity],
   );
 };

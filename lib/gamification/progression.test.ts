@@ -6,6 +6,7 @@ import {
   createExpeditionProfile,
   getLevelProgress,
   parseExpeditionProfile,
+  sanitizeProfileIdentity,
 } from "@/lib/gamification/progression";
 
 describe("expedition progression", () => {
@@ -45,5 +46,32 @@ describe("expedition progression", () => {
 
   it("rejects malformed local progression data", () => {
     expect(parseExpeditionProfile("not-json")).toBeNull();
+  });
+
+  it("adds defaults when recovering an existing local profile", () => {
+    const profile = parseExpeditionProfile(
+      JSON.stringify({
+        version: 1,
+        xp: 0,
+        totalFocusMinutes: 0,
+        completedSummits: 0,
+        focusChain: 0,
+        completedSessionIds: [],
+      }),
+    );
+
+    expect(profile).toMatchObject({
+      displayName: "Trailblazer",
+      avatarUrl: null,
+      onboardingComplete: false,
+    });
+  });
+
+  it("normalizes local profile identity", () => {
+    expect(sanitizeProfileIdentity("  Mara  ", null)).toEqual({
+      displayName: "Mara",
+      avatarUrl: null,
+      onboardingComplete: true,
+    });
   });
 });

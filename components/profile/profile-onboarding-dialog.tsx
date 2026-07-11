@@ -1,0 +1,149 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+
+import { supabase } from "@/lib/supabase/client";
+
+type ProfileOnboardingDialogProps = {
+  initialName: string;
+  onComplete: (displayName: string, avatarUrl: string | null) => void;
+};
+
+export function ProfileOnboardingDialog({
+  initialName,
+  onComplete,
+}: ProfileOnboardingDialogProps) {
+  const [displayName, setDisplayName] = useState(initialName);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(() => supabase !== null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    void (async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        setLoadingUser(false);
+        return;
+      }
+
+      setUser(data.user);
+      const metadata = data.user.user_metadata;
+      const googleName =
+        typeof metadata.full_name === "string"
+          ? metadata.full_name
+          : typeof metadata.name === "string"
+            ? metadata.name
+            : initialName;
+      const { data: savedProfile } = await supabase
+        .from("hiker_profiles")
+        .select("display_name")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      setDisplayName(savedProfile?.display_name ?? googleName);
+      setLoadingUser(false);
+    })();
+  }, [initialName]);
+
+  const signInWithGoogle = async () => {
+    if (!supabase) return;
+    setAuthError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) setAuthError(error.message);
+  };
+
+  const saveProfile = async () => {
+    if (!supabase || !user || !displayName.trim()) return;
+
+    setSaving(true);
+    setAuthError(null);
+    const metadata = user.user_metadata;
+    const avatarUrl =
+      typeof metadata.avatar_url === "string"
+        ? metadata.avatar_url
+        : typeof metadata.picture === "string"
+          ? metadata.picture
+          : null;
+    const { error } = await supabase.from("hiker_profiles").upsert(
+      {
+        id: user.id,
+        display_name: displayName.trim(),
+        avatar_url: avatarUrl,
+      },
+      { onConflict: "id" },
+    );
+    setSaving(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+    onComplete(displayName, avatarUrl);
+  };
+
+  return (
+    <div className="profile-onboarding-backdrop" role="presentation">
+      <section
+        className="profile-onboarding-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-onboarding-title"
+      >
+        <span className="profile-onboarding-emblem" aria-hidden="true">
+          🥾
+        </span>
+        <p className="section-kicker">Welcome to Summitodoro</p>
+        <h2 id="profile-onboarding-title">
+          {user ? "Name your hiker" : "Continue your expedition"}
+        </h2>
+        {!user && (
+          <p>Sign in with Google first, then choose the name for your hiker.</p>
+        )}
+        {user && (
+          <>
+            <p>Your hiker profile will be saved to your Supabase account.</p>
+            <label>
+              Hiker name
+              <input
+                value={displayName}
+                maxLength={40}
+                autoFocus
+                onChange={(event) => setDisplayName(event.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className="primary-button"
+              disabled={!displayName.trim() || saving}
+              onClick={() => void saveProfile()}
+            >
+              {saving ? "Saving profile…" : "Save hiker profile"}
+            </button>
+          </>
+        )}
+        {supabase && !user && !loadingUser ? (
+          <button
+            type="button"
+            className="google-sign-in"
+            onClick={() => void signInWithGoogle()}
+          >
+            Continue with Google
+          </button>
+        ) : (
+          !supabase && (
+            <p className="google-sign-in-note">
+              Google sign-in is not configured yet.
+            </p>
+          )
+        )}
+        {authError && <p className="google-sign-in-note">{authError}</p>}
+      </section>
+    </div>
+  );
+}

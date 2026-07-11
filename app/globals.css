@@ -1541,6 +1541,15 @@ a {
   box-shadow: inset 0 -12px #d7e6bc;
   font-size: 10px;
 }
+.avatar.has-photo {
+  background-color: #d7e6bc;
+  background-position: center;
+  background-size: cover;
+  box-shadow: none;
+}
+.avatar.has-photo span {
+  display: none;
+}
 .hiker-profile > div:nth-child(2) {
   display: grid;
   gap: 2px;
@@ -1569,6 +1578,92 @@ a {
 .profile-status.active {
   color: #078f49;
   background: #dff3e7;
+}
+.profile-onboarding-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 35, 26, 0.58);
+  backdrop-filter: blur(5px);
+}
+.profile-onboarding-dialog {
+  width: min(100%, 390px);
+  padding: 32px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid #d8ded7;
+  border-radius: 16px;
+  color: #173d2b;
+  background: #f7f8f4;
+  box-shadow: 0 24px 72px rgba(9, 27, 17, 0.32);
+}
+.profile-onboarding-dialog h2,
+.profile-onboarding-dialog p {
+  margin: 0;
+}
+.profile-onboarding-dialog > p:not(.section-kicker):not(.google-sign-in-note) {
+  color: #657169;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.profile-onboarding-emblem {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #e1f2e7;
+  font-size: 24px;
+}
+.profile-onboarding-dialog label {
+  display: grid;
+  gap: 7px;
+  color: #5f6d64;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.profile-onboarding-dialog input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5cc;
+  border-radius: 8px;
+  color: #173d2b;
+  background: white;
+  font: inherit;
+  text-transform: none;
+}
+.profile-onboarding-dialog input:focus-visible {
+  outline: 3px solid rgba(10, 162, 86, 0.25);
+  outline-offset: 2px;
+}
+.profile-onboarding-dialog .primary-button {
+  justify-content: center;
+}
+.google-sign-in {
+  min-height: 40px;
+  border: 1px solid #cbd5cc;
+  border-radius: 8px;
+  color: #32443a;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.google-sign-in:hover {
+  border-color: #8da896;
+  background: #f4f8f4;
+}
+.google-sign-in-note {
+  color: #77837b;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
 }
 .game-map {
   position: relative;
@@ -2212,6 +2307,12 @@ body:has(.game-shell) {
 }
 .map-hiker-marker {
   transition: transform 250ms linear;
+}
+.map-hiker-marker.has-avatar {
+  color: transparent;
+  background-color: #e1f2e7;
+  background-position: center;
+  background-size: cover;
 }
 .checkpoint-dock {
   bottom: 80px;

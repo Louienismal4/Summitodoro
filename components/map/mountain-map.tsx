@@ -27,6 +27,7 @@ type MountainMapProps = {
   progress: number;
   checkpoints: MapCheckpoint[];
   reachedCheckpointIds: string[];
+  hikerAvatarUrl: string | null;
   onUnavailable: (reason: string) => void;
 };
 
@@ -38,6 +39,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
       progress,
       checkpoints,
       reachedCheckpointIds,
+      hikerAvatarUrl,
       onUnavailable,
     },
     ref,
@@ -46,6 +48,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     const mapRef = useRef<MapLibreMap | null>(null);
     const boundsRef = useRef<LngLatBounds | null>(null);
     const hikerMarkerRef = useRef<Marker | null>(null);
+    const hikerElementRef = useRef<HTMLDivElement | null>(null);
     const staticMarkersRef = useRef<Marker[]>([]);
     const checkpointElementsRef = useRef(new Map<string, HTMLDivElement>());
     const onUnavailableRef = useRef(onUnavailable);
@@ -53,9 +56,11 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     const coordinateRef = useRef(coordinate);
     const progressRef = useRef(progress);
     const reachedCheckpointIdsRef = useRef(reachedCheckpointIds);
+    const hikerAvatarUrlRef = useRef(hikerAvatarUrl);
     progressRef.current = progress;
     coordinateRef.current = coordinate;
     reachedCheckpointIdsRef.current = reachedCheckpointIds;
+    hikerAvatarUrlRef.current = hikerAvatarUrl;
 
     useEffect(() => {
       onUnavailableRef.current = onUnavailable;
@@ -199,7 +204,15 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             const hikerElement = document.createElement("div");
             hikerElement.className = "map-hiker-marker";
             hikerElement.setAttribute("aria-label", "Virtual hiker position");
-            hikerElement.textContent = "🥾";
+            hikerElement.classList.toggle(
+              "has-avatar",
+              Boolean(hikerAvatarUrlRef.current),
+            );
+            hikerElement.style.backgroundImage = hikerAvatarUrlRef.current
+              ? `url("${hikerAvatarUrlRef.current}")`
+              : "";
+            hikerElement.textContent = hikerAvatarUrlRef.current ? "" : "🥾";
+            hikerElementRef.current = hikerElement;
             hikerMarkerRef.current = new maplibregl.Marker({
               element: hikerElement,
             })
@@ -229,6 +242,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
         staticMarkersRef.current.forEach((marker) => marker.remove());
         mapRef.current?.remove();
         hikerMarkerRef.current = null;
+        hikerElementRef.current = null;
         staticMarkersRef.current = [];
         checkpointElements.clear();
         mapRef.current = null;
@@ -239,6 +253,17 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     useEffect(() => {
       hikerMarkerRef.current?.setLngLat(coordinate);
     }, [coordinate]);
+
+    useEffect(() => {
+      const hikerElement = hikerElementRef.current;
+      if (!hikerElement) return;
+
+      hikerElement.classList.toggle("has-avatar", Boolean(hikerAvatarUrl));
+      hikerElement.style.backgroundImage = hikerAvatarUrl
+        ? `url("${hikerAvatarUrl}")`
+        : "";
+      hikerElement.textContent = hikerAvatarUrl ? "" : "🥾";
+    }, [hikerAvatarUrl]);
 
     useEffect(() => {
       const interval = window.setInterval(() => {

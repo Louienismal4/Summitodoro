@@ -182,7 +182,9 @@ export function ExpeditionSidebar({
           <div className="level-row">
             <div className="level-shield">{level.level}</div>
             <div>
-              <strong>Trailblazer · Level {level.level}</strong>
+              <strong>
+                {profile.displayName} · Level {level.level}
+              </strong>
               <small>
                 {level.currentLevelXp} / {level.nextLevelXp} XP to next rank
               </small>
@@ -249,8 +251,8 @@ export function ExpeditionSidebar({
               <div>
                 <strong>Summit</strong>
                 <small>
-                  Completes at {formatRemainingTime(durationMs)} elapsed · 00:00
-                  left
+                  Completes at {formatRemainingTime(durationMs)} elapsed ·
+                  00:00:00 left
                 </small>
               </div>
             </div>
@@ -278,12 +280,20 @@ export function ExpeditionSidebar({
       </div>
 
       <section className="hiker-profile">
-        <div className="avatar" aria-hidden="true">
+        <div
+          className={profile.avatarUrl ? "avatar has-photo" : "avatar"}
+          aria-hidden="true"
+          style={
+            profile.avatarUrl
+              ? { backgroundImage: `url("${profile.avatarUrl}")` }
+              : undefined
+          }
+        >
           <span>◕‿◕</span>
         </div>
         <div>
           <small>Hiker profile</small>
-          <strong>Trailblazer</strong>
+          <strong>{profile.displayName}</strong>
           <span>
             Level {level.level} · {profile.xp} XP
           </span>

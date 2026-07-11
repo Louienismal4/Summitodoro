@@ -1,5 +1,8 @@
 export type ExpeditionProfile = {
   version: 1;
+  displayName: string;
+  avatarUrl: string | null;
+  onboardingComplete: boolean;
   xp: number;
   totalFocusMinutes: number;
   completedSummits: number;

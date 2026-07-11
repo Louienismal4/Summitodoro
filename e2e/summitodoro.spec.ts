@@ -1,5 +1,39 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "summitodoro:expedition-profile",
+      JSON.stringify({
+        version: 1,
+        displayName: "Trailblazer",
+        avatarUrl: null,
+        onboardingComplete: true,
+        xp: 0,
+        totalFocusMinutes: 0,
+        completedSummits: 0,
+        focusChain: 0,
+        completedSessionIds: [],
+      }),
+    );
+  });
+});
+
+test("onboards a new hiker profile", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.removeItem("summitodoro:expedition-profile");
+  });
+  await page.goto("/");
+
+  const dialog = page.getByRole("dialog", {
+    name: "Continue your expedition",
+  });
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Continue with Google" }),
+  ).toBeVisible();
+});
+
 test("loads directly into the expedition dashboard", async ({ page }) => {
   const hydrationErrors: string[] = [];
   const mapboxRequests: string[] = [];
@@ -58,11 +92,11 @@ test("switches mountains and explains scaled checkpoint timing", async ({
   });
 
   await expect(
-    page.getByText(/Unlocks at 10:30 elapsed/).first(),
+    page.getByText(/Unlocks at 00:10:30 elapsed/).first(),
   ).toBeVisible();
   await page.getByRole("button", { name: "45 min", exact: true }).click();
   await expect(
-    page.getByText(/Unlocks at 15:45 elapsed/).first(),
+    page.getByText(/Unlocks at 00:15:45 elapsed/).first(),
   ).toBeVisible();
 
   await mountainSelect.selectOption("mt-pulag");

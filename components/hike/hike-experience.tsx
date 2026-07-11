@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ExpeditionSidebar } from "@/components/hike/expedition-sidebar";
 import { MountainMap } from "@/components/map/mountain-map";
+import { ProfileOnboardingDialog } from "@/components/profile/profile-onboarding-dialog";
 import type {
   MapCheckpoint,
   MountainMapHandle,
@@ -133,6 +134,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
             progress={focus.progress}
             checkpoints={mapCheckpoints}
             reachedCheckpointIds={focus.reachedCheckpointIds}
+            hikerAvatarUrl={game.profile.avatarUrl}
             onUnavailable={handleMapUnavailable}
           />
         )}
@@ -349,6 +351,12 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
             </button>
           </div>
         </div>
+      )}
+      {game.hydrated && !game.profile.onboardingComplete && (
+        <ProfileOnboardingDialog
+          initialName={game.profile.displayName}
+          onComplete={game.updateIdentity}
+        />
       )}
     </main>
   );

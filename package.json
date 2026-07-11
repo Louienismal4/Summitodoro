@@ -16,6 +16,7 @@
     "test:e2e:server": "next build && next start -p 3100"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
     "@turf/turf": "7.3.5",
     "maplibre-gl": "^5.24.0",
     "next": "^16.2.10",
