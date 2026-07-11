@@ -1,6 +1,6 @@
 # Summitodoro
 
-Summitodoro is a gamified Pomodoro prototype where elapsed focus time moves a virtual hiker along a versioned Philippine mountain trail. It includes local snapshots of mapped OpenStreetMap paths for Mt. Ulap, Mt. Pulag, and Mt. Pinatubo; 5/15/25-minute timer presets; pause/resume/reset and refresh recovery; timed checkpoints; summit completion; a MapLibre and OpenStreetMap-derived basemap; and a low-data fallback.
+Summitodoro is a gamified Pomodoro prototype where elapsed focus time moves a virtual hiker along a versioned Philippine mountain trail. It includes local snapshots of mapped OpenStreetMap paths for Mt. Ulap, Mt. Pulag, and Mt. Pinatubo; 30/45/60/90/120-minute timer presets; automatic short breaks at work checkpoints; pause/resume/reset and refresh recovery; timed checkpoints; summit completion; a MapLibre and OpenStreetMap-derived basemap; and a low-data fallback.
 
 The expedition dashboard also maintains a local hiker profile with XP, levels, completed summits, total focus minutes, and a focus-chain counter. Each completed session is rewarded once by session ID, so refreshing a completion cannot duplicate XP.
 
@@ -8,6 +8,11 @@ Checkpoint positions are proportional to elapsed focus time. Every route reaches
 its first checkpoint at 35%, its second checkpoint at 70%, and the summit at
 100%. The dashboard converts those percentages into exact elapsed and remaining
 times for the selected duration. Pausing freezes both the clock and hiker.
+
+When a running session reaches a work checkpoint, the work clock pauses for a
+short break and resumes automatically. Each break is 20% of one work segment;
+for example, a 60-minute session with two intermediate checkpoints has three
+20-minute work segments and four-minute short breaks after the first two.
 
 > Routes are virtual productivity representations and are not intended for real-world navigation, access guidance, trail access, or safety decisions. Geometry is a simplified local snapshot of OpenStreetMap data, not a live navigation service; conditions and access can change.
 

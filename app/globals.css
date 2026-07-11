@@ -726,7 +726,7 @@ a {
 .preset-group {
   margin: 28px 0 12px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border: 1px solid var(--line);
 }
 .preset-help {
@@ -743,6 +743,7 @@ a {
   background: transparent;
   cursor: pointer;
   font-size: 11px;
+  white-space: nowrap;
 }
 .preset:last-child {
   border: 0;
@@ -1991,34 +1992,25 @@ body:has(.game-shell) {
   display: none;
 }
 .dashboard-header {
-  min-height: 78px;
-  padding: 5px 2px 13px;
+  min-height: 0;
+  margin: 0 0 18px;
+  padding: 18px 14px 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   border-bottom: 1px solid #d9ddd7;
 }
 .dashboard-brand {
+  width: min(340px, 100%);
   display: flex;
   align-items: center;
 }
 .dashboard-brand-logo {
   display: block;
-  width: 200px;
-  height: 150px;
+  width: 100%;
+  height: auto;
   object-fit: contain;
 }
-.dashboard-local-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #718078;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 7px;
-  font-weight: 800;
-}
-.dashboard-local-status i,
 .map-duration-dock i {
   width: 6px;
   height: 6px;
@@ -2378,11 +2370,15 @@ body:has(.game-shell) {
     overflow-y: auto;
   }
   .dashboard-header {
-    min-height: 64px;
+    min-height: 0;
+    margin-bottom: 14px;
+    padding: 14px 12px 20px;
+  }
+  .dashboard-brand {
+    width: min(220px, 100%);
   }
   .dashboard-brand-logo {
-    width: 132px;
-    height: 60px;
+    width: 100%;
   }
   .hiker-profile {
     display: none;

@@ -15,6 +15,7 @@ export const persistedFocusSessionSchema = z.object({
   version: z.literal(1),
   session: sessionSchema,
   reachedCheckpointIds: z.array(z.string()),
+  breakUntil: z.number().nonnegative().nullable().optional(),
 });
 
 const clamp = (value: number, minimum: number, maximum: number) =>

@@ -6,6 +6,10 @@ import type { LngLatBounds, Map as MapLibreMap, Marker } from "maplibre-gl";
 import { mapStyleUrl } from "@/lib/map/config";
 import type { Coordinate, TrailFeature } from "@/types/trail";
 
+const MAP_MIN_ZOOM = 14;
+const MAP_MAX_ZOOM = 21;
+const HIKER_RECENTER_INTERVAL_MS = 10_000;
+
 export type MapCheckpoint = {
   id: string;
   name: string;
@@ -46,9 +50,11 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     const checkpointElementsRef = useRef(new Map<string, HTMLDivElement>());
     const onUnavailableRef = useRef(onUnavailable);
     const initialCoordinateRef = useRef(coordinate);
+    const coordinateRef = useRef(coordinate);
     const progressRef = useRef(progress);
     const reachedCheckpointIdsRef = useRef(reachedCheckpointIds);
     progressRef.current = progress;
+    coordinateRef.current = coordinate;
     reachedCheckpointIdsRef.current = reachedCheckpointIds;
 
     useEffect(() => {
@@ -96,6 +102,8 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             container: containerRef.current,
             style: mapStyleUrl,
             bounds,
+            minZoom: MAP_MIN_ZOOM,
+            maxZoom: MAP_MAX_ZOOM,
             fitBoundsOptions: { padding: 80 },
             attributionControl: {},
           });
@@ -231,6 +239,21 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     useEffect(() => {
       hikerMarkerRef.current?.setLngLat(coordinate);
     }, [coordinate]);
+
+    useEffect(() => {
+      const interval = window.setInterval(() => {
+        const map = mapRef.current;
+        if (!map?.isStyleLoaded()) return;
+
+        map.easeTo({
+          center: coordinateRef.current,
+          duration: 800,
+          essential: true,
+        });
+      }, HIKER_RECENTER_INTERVAL_MS);
+
+      return () => window.clearInterval(interval);
+    }, []);
 
     useEffect(() => {
       const map = mapRef.current;

@@ -12,6 +12,7 @@ import {
   resumeSession,
   startSession,
 } from "@/lib/timer/focus-session";
+import { getShortBreakDurationMs } from "@/lib/timer/milestones";
 import { getNewlyReachedCheckpoints } from "@/lib/trail/checkpoints";
 import type { FocusSession, PersistedFocusSession } from "@/types/session";
 import type { TrailCheckpoint } from "@/types/trail";
@@ -37,6 +38,7 @@ export const useFocusSession = ({
   );
   const [latestCheckpoint, setLatestCheckpoint] =
     useState<TrailCheckpoint | null>(null);
+  const [breakUntil, setBreakUntil] = useState<number | null>(null);
   const previousProgress = useRef(0);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export const useFocusSession = ({
     if (recovered && persisted) {
       setSession(recovered);
       setReachedCheckpointIds(persisted.reachedCheckpointIds);
+      setBreakUntil(persisted.breakUntil ?? null);
       previousProgress.current = getProgress(recovered, hydrationTime);
     }
     setNow(hydrationTime);
@@ -67,23 +70,29 @@ export const useFocusSession = ({
       version: 1,
       session,
       reachedCheckpointIds,
+      breakUntil,
     };
     window.localStorage.setItem(storageKey, JSON.stringify(persisted));
-  }, [hydrated, reachedCheckpointIds, session, storageKey]);
+  }, [breakUntil, hydrated, reachedCheckpointIds, session, storageKey]);
 
   useEffect(() => {
-    if (session.status !== "running") return;
+    if (session.status !== "running" && breakUntil === null) return;
 
     const updateFromClock = () => {
       const currentTime = Date.now();
       setNow(currentTime);
+      if (breakUntil !== null && currentTime >= breakUntil) {
+        setBreakUntil(null);
+        setSession((current) => resumeSession(current, currentTime));
+        return;
+      }
       setSession((current) => completeSessionIfElapsed(current, currentTime));
     };
 
     updateFromClock();
     const interval = window.setInterval(updateFromClock, 1_000);
     return () => window.clearInterval(interval);
-  }, [session.status]);
+  }, [breakUntil, session.status]);
 
   const progress = getProgress(session, now);
 
@@ -106,9 +115,25 @@ export const useFocusSession = ({
         ...crossed.map((checkpoint) => checkpoint.id),
       ]);
       setLatestCheckpoint(crossed.at(-1) ?? null);
+      if (session.status === "running" && breakUntil === null) {
+        const breakStartedAt = now;
+        setSession((current) => pauseSession(current, breakStartedAt));
+        setBreakUntil(
+          breakStartedAt +
+            getShortBreakDurationMs(session.durationMs, checkpoints.length),
+        );
+      }
     }
     previousProgress.current = progress;
-  }, [checkpoints, hydrated, progress, reachedCheckpointIds]);
+  }, [
+    breakUntil,
+    checkpoints,
+    hydrated,
+    now,
+    progress,
+    reachedCheckpointIds,
+    session,
+  ]);
 
   const start = useCallback(() => {
     const currentTime = Date.now();
@@ -123,15 +148,17 @@ export const useFocusSession = ({
   }, []);
 
   const resume = useCallback(() => {
+    if (breakUntil !== null) return;
     const currentTime = Date.now();
     setNow(currentTime);
     setSession((current) => resumeSession(current, currentTime));
-  }, []);
+  }, [breakUntil]);
 
   const reset = useCallback(() => {
     setSession((current) => createFocusSession(current.durationMs));
     setReachedCheckpointIds([]);
     setLatestCheckpoint(null);
+    setBreakUntil(null);
     previousProgress.current = 0;
     setNow(Date.now());
   }, []);
@@ -140,6 +167,7 @@ export const useFocusSession = ({
     setSession((current) =>
       current.status === "idle" ? createFocusSession(durationMs) : current,
     );
+    setBreakUntil(null);
     previousProgress.current = 0;
   }, []);
 
@@ -151,6 +179,9 @@ export const useFocusSession = ({
       hydrated,
       progress,
       remainingMs: getRemainingMs(session, now),
+      isOnBreak: breakUntil !== null,
+      shortBreakRemainingMs:
+        breakUntil === null ? 0 : Math.max(0, breakUntil - now),
       reachedCheckpointIds,
       latestCheckpoint,
       start,
@@ -163,6 +194,7 @@ export const useFocusSession = ({
     [
       dismissCheckpoint,
       hydrated,
+      breakUntil,
       latestCheckpoint,
       now,
       pause,

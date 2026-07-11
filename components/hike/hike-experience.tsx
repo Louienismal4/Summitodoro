@@ -102,6 +102,8 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         status={focus.session.status}
         durationMs={focus.session.durationMs}
         remainingMs={focus.remainingMs}
+        isOnBreak={focus.isOnBreak}
+        shortBreakRemainingMs={focus.shortBreakRemainingMs}
         progress={focus.progress}
         hydrated={focus.hydrated && game.hydrated}
         checkpoints={mountain.checkpoints}
@@ -240,7 +242,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
           <span>
             <i /> Focus duration
           </span>
-          {[5, 15, 25].map((minutes) => (
+          {[30, 45, 60, 90, 120].map((minutes) => (
             <button
               key={minutes}
               type="button"

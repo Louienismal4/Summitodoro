@@ -58,11 +58,11 @@ test("switches mountains and explains scaled checkpoint timing", async ({
   });
 
   await expect(
-    page.getByText(/Unlocks at 08:45 elapsed/).first(),
+    page.getByText(/Unlocks at 10:30 elapsed/).first(),
   ).toBeVisible();
-  await page.getByRole("button", { name: "5 min", exact: true }).click();
+  await page.getByRole("button", { name: "45 min", exact: true }).click();
   await expect(
-    page.getByText(/Unlocks at 01:45 elapsed/).first(),
+    page.getByText(/Unlocks at 15:45 elapsed/).first(),
   ).toBeVisible();
 
   await mountainSelect.selectOption("mt-pulag");
@@ -79,7 +79,7 @@ test("starts, pauses, and restores a session after refresh", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "5 min", exact: true }).click();
+  await page.getByRole("button", { name: "30 min", exact: true }).click();
   await page.getByRole("button", { name: "Deploy hiker" }).click();
   await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
   await page.reload();

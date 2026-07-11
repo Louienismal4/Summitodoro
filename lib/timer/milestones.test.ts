@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getTimedMilestones } from "./milestones";
+import { getShortBreakDurationMs, getTimedMilestones } from "./milestones";
 
 const checkpoints = [
   { id: "first", name: "First", description: "", progress: 0.35 },
@@ -20,5 +20,9 @@ describe("getTimedMilestones", () => {
       { id: "first", elapsedMs: 105_000, remainingMs: 195_000 },
       { id: "second", elapsedMs: 210_000, remainingMs: 90_000 },
     ]);
+  });
+
+  it("uses 20 percent of each work segment for short breaks", () => {
+    expect(getShortBreakDurationMs(60 * 60_000, 2)).toBe(4 * 60_000);
   });
 });

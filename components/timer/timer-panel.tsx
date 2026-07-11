@@ -5,6 +5,8 @@ type TimerPanelProps = {
   status: SessionStatus;
   durationMs: number;
   remainingMs: number;
+  isOnBreak: boolean;
+  shortBreakRemainingMs: number;
   progress: number;
   hydrated: boolean;
   onStart: () => void;
@@ -14,12 +16,14 @@ type TimerPanelProps = {
   onDurationChange: (durationMs: number) => void;
 };
 
-const presets = [5, 15, 25];
+const presets = [30, 45, 60, 90, 120];
 
 export function TimerPanel({
   status,
   durationMs,
   remainingMs,
+  isOnBreak,
+  shortBreakRemainingMs,
   progress,
   hydrated,
   onStart,
@@ -29,8 +33,9 @@ export function TimerPanel({
   onDurationChange,
 }: TimerPanelProps) {
   const activeMinutes = durationMs / 60_000;
-  const timerLabel =
-    status === "completed"
+  const timerLabel = isOnBreak
+    ? formatRemainingTime(shortBreakRemainingMs)
+    : status === "completed"
       ? "Summit reached"
       : formatRemainingTime(remainingMs);
 
@@ -41,7 +46,9 @@ export function TimerPanel({
           <span className="section-kicker">Pomodoro console</span>
           <h2 id="focus-timer-heading">Focus control</h2>
         </div>
-        <span className={`status-badge status-${status}`}>{status}</span>
+        <span className={`status-badge status-${isOnBreak ? "break" : status}`}>
+          {isOnBreak ? "short break" : status}
+        </span>
       </div>
 
       <div className="preset-group" aria-label="Focus duration">
@@ -58,16 +65,20 @@ export function TimerPanel({
         ))}
       </div>
       <p className="preset-help">
-        25 min is a classic Pomodoro focus block. Choose 5 or 15 min for a
-        shorter climb.
+        Short breaks are 20% of each work segment. Choose 60 min for a
+        three-checkpoint expedition.
       </p>
 
       <div className="timer-face" aria-live="off">
         <span className="timer-label">
-          {status === "idle" ? "Ready when you are" : "Time remaining"}
+          {isOnBreak
+            ? "Short break"
+            : status === "idle"
+              ? "Ready when you are"
+              : "Time remaining"}
         </span>
         <strong
-          aria-label={`${Math.ceil(remainingMs / 1000)} seconds remaining`}
+          aria-label={`${Math.ceil((isOnBreak ? shortBreakRemainingMs : remainingMs) / 1000)} seconds remaining`}
         >
           {hydrated ? timerLabel : "--:--"}
         </strong>
@@ -96,9 +107,14 @@ export function TimerPanel({
             Pause
           </button>
         )}
-        {status === "paused" && (
+        {status === "paused" && !isOnBreak && (
           <button className="primary-button" type="button" onClick={onResume}>
             Resume
+          </button>
+        )}
+        {isOnBreak && (
+          <button className="primary-button" type="button" disabled>
+            Resting
           </button>
         )}
         <button
@@ -112,9 +128,11 @@ export function TimerPanel({
       </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
-        {status === "completed"
-          ? "Focus session complete. Summit reached."
-          : `${Math.ceil(remainingMs / 60_000)} minutes remaining.`}
+        {isOnBreak
+          ? `${Math.ceil(shortBreakRemainingMs / 60_000)} minutes remaining in your short break.`
+          : status === "completed"
+            ? "Focus session complete. Summit reached."
+            : `${Math.ceil(remainingMs / 60_000)} minutes remaining.`}
       </p>
     </section>
   );

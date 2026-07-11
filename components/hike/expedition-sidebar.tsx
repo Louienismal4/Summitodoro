@@ -27,6 +27,8 @@ type ExpeditionSidebarProps = {
   status: SessionStatus;
   durationMs: number;
   remainingMs: number;
+  isOnBreak: boolean;
+  shortBreakRemainingMs: number;
   progress: number;
   hydrated: boolean;
   checkpoints: readonly TrailCheckpoint[];
@@ -51,6 +53,8 @@ export function ExpeditionSidebar({
   status,
   durationMs,
   remainingMs,
+  isOnBreak,
+  shortBreakRemainingMs,
   progress,
   hydrated,
   checkpoints,
@@ -83,8 +87,8 @@ export function ExpeditionSidebar({
               className="dashboard-brand-logo"
               src="/summitodoro-logo.svg"
               alt=""
-              width={200}
-              height={80}
+              width={1200}
+              height={700}
               priority
             />
           </Link>
@@ -261,6 +265,8 @@ export function ExpeditionSidebar({
           status={status}
           durationMs={durationMs}
           remainingMs={remainingMs}
+          isOnBreak={isOnBreak}
+          shortBreakRemainingMs={shortBreakRemainingMs}
           progress={progress}
           hydrated={hydrated}
           onStart={onStart}

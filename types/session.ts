@@ -13,4 +13,5 @@ export type PersistedFocusSession = {
   version: 1;
   session: FocusSession;
   reachedCheckpointIds: string[];
+  breakUntil?: number | null;
 };

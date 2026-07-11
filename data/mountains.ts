@@ -11,7 +11,7 @@ export const mountains = [
     description:
       "A virtual focus ascent along the mapped Philex Ridge Trail on Mt. Ulap. This route snapshot is not a hiking guide.",
     difficulty: "moderate",
-    defaultDurationMinutes: 25,
+    defaultDurationMinutes: 30,
     trailName: "Philex Ridge Trail",
     trailAssetUrl: "/data/trails/mt-ulap-osm-v1.geojson",
     trailVersion: 2,
@@ -52,7 +52,7 @@ export const mountains = [
     description:
       "A virtual focus ascent along the mapped Ambangeg Trail to Mt. Pulag. This route snapshot is not a hiking guide.",
     difficulty: "hard",
-    defaultDurationMinutes: 25,
+    defaultDurationMinutes: 30,
     trailName: "Ambangeg Trail",
     trailAssetUrl: "/data/trails/mt-pulag-osm-v1.geojson",
     trailVersion: 2,
@@ -93,7 +93,7 @@ export const mountains = [
     description:
       "A virtual focus ascent along the mapped route to the Mt. Pinatubo crater. This route snapshot is not a hiking guide.",
     difficulty: "moderate",
-    defaultDurationMinutes: 25,
+    defaultDurationMinutes: 30,
     trailName: "Route to Mount Pinatubo Crater",
     trailAssetUrl: "/data/trails/mt-pinatubo-osm-v1.geojson",
     trailVersion: 2,
