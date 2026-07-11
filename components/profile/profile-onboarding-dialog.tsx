@@ -30,6 +30,14 @@ export function ProfileOnboardingDialog({
         return;
       }
 
+      if (window.location.hash) {
+        window.history.replaceState(
+          {},
+          document.title,
+          `${window.location.pathname}${window.location.search}`,
+        );
+      }
+
       setUser(data.user);
       const metadata = data.user.user_metadata;
       const googleName =
@@ -53,7 +61,9 @@ export function ProfileOnboardingDialog({
     setAuthError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin,
+      },
     });
     if (error) setAuthError(error.message);
   };

@@ -37,7 +37,9 @@ Open `http://localhost:3000` to enter the full-screen expedition dashboard direc
 The welcome dialog always supports a local hiker name. To offer Google sign-in
 and profile personalization, configure Google as a provider in Supabase Auth,
 then set `NEXT_PUBLIC_SUPABASE_URL` and
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and Vercel. The Google
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and Vercel. Set
+`NEXT_PUBLIC_SITE_URL=https://summitodoro.vercel.app` for the production
+deployment. The Google
 profile name and picture personalize the local hiker profile after sign-in.
 Run `supabase/migrations/20260711_create_hiker_profiles.sql` in the Supabase
 SQL Editor before using the app: it creates the per-user profile table and its
