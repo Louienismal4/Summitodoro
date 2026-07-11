@@ -729,6 +729,12 @@ a {
   grid-template-columns: repeat(3, 1fr);
   border: 1px solid var(--line);
 }
+.preset-help {
+  margin: 0 0 8px;
+  color: #7e8b85;
+  font-size: 9px;
+  line-height: 1.4;
+}
 .preset {
   padding: 10px 4px;
   border: 0;
@@ -1278,6 +1284,10 @@ a {
   border-radius: 5px;
   overflow: hidden;
 }
+.expedition-sidebar .preset-help {
+  margin: 7px 0 0;
+  font-size: 7px;
+}
 .expedition-sidebar .preset {
   padding: 8px 4px;
   border-color: #dce0da;
@@ -1449,6 +1459,57 @@ a {
   height: 100%;
   background: #0aa256;
 }
+.objective-list {
+  margin-bottom: 9px;
+  display: grid;
+  gap: 6px;
+}
+.objective {
+  padding: 7px 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e1e4df;
+  border-radius: 4px;
+  background: #f7f8f5;
+}
+.objective > span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #727a73;
+  background: #e2e6e1;
+  font-size: 8px;
+  font-weight: 800;
+}
+.objective > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.objective strong {
+  color: #586059;
+  font-size: 9px;
+}
+.objective small {
+  overflow: hidden;
+  color: #8a918b;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "Courier New", monospace;
+  font-size: 7px;
+}
+.objective.reached {
+  border-color: #b9dfc7;
+  background: #edf8f1;
+}
+.objective.reached > span {
+  color: white;
+  background: #0aa256;
+}
 .objective-card p {
   margin: 0;
   color: #8a908a;
@@ -1526,11 +1587,11 @@ a {
   position: absolute;
   inset: 0;
 }
-.game-map .mapboxgl-ctrl-top-right {
+.game-map .maplibregl-ctrl-top-right {
   top: 74px;
   right: 18px;
 }
-.game-map .mapboxgl-ctrl-group {
+.game-map .maplibregl-ctrl-group {
   overflow: hidden;
   border-radius: 6px;
   box-shadow: 0 5px 20px rgba(33, 42, 36, 0.1);
@@ -1882,7 +1943,7 @@ a {
     left: 12px;
     max-width: none;
   }
-  .game-map .mapboxgl-ctrl-top-right {
+  .game-map .maplibregl-ctrl-top-right {
     top: 148px;
     right: 12px;
   }
@@ -1930,7 +1991,7 @@ body:has(.game-shell) {
   display: none;
 }
 .dashboard-header {
-  min-height: 62px;
+  min-height: 78px;
   padding: 5px 2px 13px;
   display: flex;
   align-items: center;
@@ -1940,34 +2001,12 @@ body:has(.game-shell) {
 .dashboard-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
-.dashboard-brand > span {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #0ba357;
-  border-radius: 7px;
-  color: white;
-  background: #0ba357;
-  font-size: 13px;
-}
-.dashboard-brand > div {
-  display: grid;
-  gap: 2px;
-}
-.dashboard-brand strong {
-  color: #153c2a;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  letter-spacing: -0.03em;
-}
-.dashboard-brand small {
-  color: #899089;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 6px;
+.dashboard-brand-logo {
+  display: block;
+  width: 200px;
+  height: 150px;
+  object-fit: contain;
 }
 .dashboard-local-status {
   display: flex;
@@ -2133,7 +2172,7 @@ body:has(.game-shell) {
   letter-spacing: 0.07em;
   font-size: 6px;
 }
-.game-map .mapboxgl-ctrl-top-right {
+.game-map .maplibregl-ctrl-top-right {
   top: 88px;
   right: 18px;
 }
@@ -2233,7 +2272,7 @@ body:has(.game-shell) {
   position: absolute;
   z-index: 8;
   right: 18px;
-  bottom: 18px;
+  bottom: 42px;
   display: grid;
   justify-items: end;
   gap: 8px;
@@ -2339,7 +2378,11 @@ body:has(.game-shell) {
     overflow-y: auto;
   }
   .dashboard-header {
-    min-height: 50px;
+    min-height: 64px;
+  }
+  .dashboard-brand-logo {
+    width: 132px;
+    height: 60px;
   }
   .hiker-profile {
     display: none;
@@ -2369,9 +2412,12 @@ body:has(.game-shell) {
   .map-control-stack small {
     display: none;
   }
-  .game-map .mapboxgl-ctrl-top-right {
+  .game-map .maplibregl-ctrl-top-right {
     top: 139px;
     right: 10px;
+  }
+  .game-map .maplibregl-ctrl-bottom-right {
+    bottom: 46dvh;
   }
   .checkpoint-dock {
     display: none;
@@ -2382,7 +2428,7 @@ body:has(.game-shell) {
   }
   .map-attribution-wrap {
     right: 10px;
-    bottom: calc(46dvh + 12px);
+    bottom: calc(46dvh + 42px);
   }
 }
 

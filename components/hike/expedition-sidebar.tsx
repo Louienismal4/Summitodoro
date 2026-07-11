@@ -1,19 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import { TimerPanel } from "@/components/timer/timer-panel";
+import { formatRemainingTime } from "@/lib/timer/format-time";
+import { getTimedMilestones } from "@/lib/timer/milestones";
 import type { LevelProgress, ExpeditionProfile } from "@/types/gamification";
 import type { SessionStatus } from "@/types/session";
+import type { TrailCheckpoint } from "@/types/trail";
+
+type MountainOption = {
+  slug: string;
+  name: string;
+  region: string;
+  difficulty: string;
+};
 
 type ExpeditionSidebarProps = {
   mountainName: string;
+  mountainSlug: string;
   mountainRegion: string;
   mountainDifficulty: string;
+  mountainOptions: readonly MountainOption[];
   status: SessionStatus;
   durationMs: number;
   remainingMs: number;
   progress: number;
   hydrated: boolean;
-  checkpointCount: number;
+  checkpoints: readonly TrailCheckpoint[];
+  reachedCheckpointIds: readonly string[];
   reachedCheckpointCount: number;
   projectedXp: number;
   profile: ExpeditionProfile;
@@ -27,14 +44,17 @@ type ExpeditionSidebarProps = {
 
 export function ExpeditionSidebar({
   mountainName,
+  mountainSlug,
   mountainRegion,
   mountainDifficulty,
+  mountainOptions,
   status,
   durationMs,
   remainingMs,
   progress,
   hydrated,
-  checkpointCount,
+  checkpoints,
+  reachedCheckpointIds,
   reachedCheckpointCount,
   projectedXp,
   profile,
@@ -45,7 +65,9 @@ export function ExpeditionSidebar({
   onReset,
   onDurationChange,
 }: ExpeditionSidebarProps) {
+  const router = useRouter();
   const active = status === "running" || status === "paused";
+  const timedMilestones = getTimedMilestones(checkpoints, durationMs);
 
   return (
     <aside className="expedition-sidebar" aria-label="Expedition dashboard">
@@ -57,15 +79,15 @@ export function ExpeditionSidebar({
             className="dashboard-brand"
             aria-label="Summitodoro dashboard"
           >
-            <span aria-hidden="true">▲</span>
-            <div>
-              <strong>Summitodoro</strong>
-              <small>Focus expedition console</small>
-            </div>
+            <Image
+              className="dashboard-brand-logo"
+              src="/summitodoro-logo.svg"
+              alt=""
+              width={200}
+              height={80}
+              priority
+            />
           </Link>
-          <span className="dashboard-local-status">
-            <i /> Local
-          </span>
         </header>
 
         <section className={active ? "mission-brief active" : "mission-brief"}>
@@ -91,15 +113,26 @@ export function ExpeditionSidebar({
           <div className="hud-card-heading">
             <span>△</span>
             <strong>Mountain selector</strong>
-            <small>1 available</small>
+            <small>{mountainOptions.length} available</small>
           </div>
           <label className="mountain-select-label">
             <span className="mountain-select-emblem" aria-hidden="true">
               ▲
             </span>
             <span className="mountain-select-copy">
-              <select aria-label="Select mountain" defaultValue="mt-ulap">
-                <option value="mt-ulap">{mountainName}</option>
+              <select
+                aria-label="Select mountain"
+                value={mountainSlug}
+                disabled={active}
+                onChange={(event) =>
+                  router.push(`/hike/${event.currentTarget.value}`)
+                }
+              >
+                {mountainOptions.map((mountain) => (
+                  <option key={mountain.slug} value={mountain.slug}>
+                    {mountain.name}
+                  </option>
+                ))}
               </select>
               <small>{mountainRegion}</small>
             </span>
@@ -171,18 +204,56 @@ export function ExpeditionSidebar({
             <span>⌖</span>
             <strong>Trail objectives</strong>
             <b>
-              {reachedCheckpointCount}/{checkpointCount}
+              {reachedCheckpointCount}/{checkpoints.length}
             </b>
           </div>
           <div className="objective-meter">
             <span
               style={{
-                width: `${(reachedCheckpointCount / checkpointCount) * 100}%`,
+                width: `${checkpoints.length === 0 ? 0 : (reachedCheckpointCount / checkpoints.length) * 100}%`,
               }}
             />
           </div>
+          <div className="objective-list">
+            {timedMilestones.map((milestone, index) => {
+              const reached = reachedCheckpointIds.includes(milestone.id);
+              return (
+                <div
+                  key={milestone.id}
+                  className={reached ? "objective reached" : "objective"}
+                >
+                  <span>{reached ? "✓" : index + 1}</span>
+                  <div>
+                    <strong>{milestone.name}</strong>
+                    <small>
+                      Unlocks at {formatRemainingTime(milestone.elapsedMs)}{" "}
+                      elapsed · {formatRemainingTime(milestone.remainingMs)}{" "}
+                      left
+                    </small>
+                  </div>
+                </div>
+              );
+            })}
+            <div
+              className={
+                status === "completed"
+                  ? "objective summit reached"
+                  : "objective summit"
+              }
+            >
+              <span>{status === "completed" ? "✓" : "▲"}</span>
+              <div>
+                <strong>Summit</strong>
+                <small>
+                  Completes at {formatRemainingTime(durationMs)} elapsed · 00:00
+                  left
+                </small>
+              </div>
+            </div>
+          </div>
           <p>
-            Reach both trail checkpoints to collect the full expedition bonus.
+            Checkpoint times scale with your selected focus duration. Pausing
+            freezes both the timer and hiker.
           </p>
         </section>
 

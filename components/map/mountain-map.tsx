@@ -1,8 +1,9 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import type { LngLatBounds, Map as MapboxMap, Marker } from "mapbox-gl";
+import type { LngLatBounds, Map as MapLibreMap, Marker } from "maplibre-gl";
 
+import { mapStyleUrl } from "@/lib/map/config";
 import type { Coordinate, TrailFeature } from "@/types/trail";
 
 export type MapCheckpoint = {
@@ -14,7 +15,6 @@ export type MapCheckpoint = {
 export type MountainMapHandle = {
   fitTrail: () => void;
   resetCamera: () => void;
-  toggleTerrain: () => boolean;
 };
 
 type MountainMapProps = {
@@ -39,12 +39,11 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
     ref,
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const mapRef = useRef<MapboxMap | null>(null);
+    const mapRef = useRef<MapLibreMap | null>(null);
     const boundsRef = useRef<LngLatBounds | null>(null);
     const hikerMarkerRef = useRef<Marker | null>(null);
     const staticMarkersRef = useRef<Marker[]>([]);
     const checkpointElementsRef = useRef(new Map<string, HTMLDivElement>());
-    const terrainEnabledRef = useRef(true);
     const onUnavailableRef = useRef(onUnavailable);
     const initialCoordinateRef = useRef(coordinate);
     const progressRef = useRef(progress);
@@ -75,58 +74,34 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
           });
         }
       },
-      toggleTerrain: () => {
-        const map = mapRef.current;
-        if (!map || !map.getSource("summitodoro-dem")) {
-          return terrainEnabledRef.current;
-        }
-        terrainEnabledRef.current = !terrainEnabledRef.current;
-        map.setTerrain(
-          terrainEnabledRef.current
-            ? { source: "summitodoro-dem", exaggeration: 1.2 }
-            : null,
-        );
-        return terrainEnabledRef.current;
-      },
     }));
 
     useEffect(() => {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-      if (!token) {
-        onUnavailableRef.current("Mapbox token is not configured.");
-        return;
-      }
-
       let disposed = false;
       const checkpointElements = checkpointElementsRef.current;
 
-      void import("mapbox-gl")
-        .then(({ default: mapboxgl }) => {
+      void import("maplibre-gl")
+        .then(({ default: maplibregl }) => {
           if (disposed || !containerRef.current) return;
-          if (!mapboxgl.supported()) {
-            onUnavailableRef.current("WebGL is unavailable on this device.");
-            return;
-          }
 
-          mapboxgl.accessToken = token;
           const start = feature.geometry.coordinates[0] as Coordinate;
           const end = feature.geometry.coordinates.at(-1) as Coordinate;
           const bounds = feature.geometry.coordinates.reduce(
             (currentBounds, point) => currentBounds.extend(point as Coordinate),
-            new mapboxgl.LngLatBounds(start, start),
+            new maplibregl.LngLatBounds(start, start),
           );
           boundsRef.current = bounds;
 
-          const map = new mapboxgl.Map({
+          const map = new maplibregl.Map({
             container: containerRef.current,
-            style: "mapbox://styles/mapbox/outdoors-v12",
+            style: mapStyleUrl,
             bounds,
             fitBoundsOptions: { padding: 80 },
-            attributionControl: true,
+            attributionControl: {},
           });
           mapRef.current = map;
           map.addControl(
-            new mapboxgl.NavigationControl({ showCompass: false }),
+            new maplibregl.NavigationControl({ showCompass: false }),
             "top-right",
           );
 
@@ -175,16 +150,6 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
               },
             });
 
-            if (!map.getSource("summitodoro-dem")) {
-              map.addSource("summitodoro-dem", {
-                type: "raster-dem",
-                url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-                tileSize: 512,
-                maxzoom: 14,
-              });
-            }
-            map.setTerrain({ source: "summitodoro-dem", exaggeration: 1.2 });
-
             const addStaticMarker = (
               markerCoordinate: Coordinate,
               kind: "trailhead" | "checkpoint" | "summit",
@@ -206,7 +171,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
               element.append(icon, caption);
               if (id) checkpointElements.set(id, element);
               staticMarkersRef.current.push(
-                new mapboxgl.Marker({ element, anchor: "bottom" })
+                new maplibregl.Marker({ element, anchor: "bottom" })
                   .setLngLat(markerCoordinate)
                   .addTo(map),
               );
@@ -227,7 +192,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             hikerElement.className = "map-hiker-marker";
             hikerElement.setAttribute("aria-label", "Virtual hiker position");
             hikerElement.textContent = "🥾";
-            hikerMarkerRef.current = new mapboxgl.Marker({
+            hikerMarkerRef.current = new maplibregl.Marker({
               element: hikerElement,
             })
               .setLngLat(initialCoordinateRef.current)
@@ -242,8 +207,12 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             }
           });
         })
-        .catch(() =>
-          onUnavailableRef.current("The map library could not be loaded."),
+        .catch((error: unknown) =>
+          onUnavailableRef.current(
+            error instanceof Error
+              ? error.message
+              : "The map library could not be loaded.",
+          ),
         );
 
       return () => {

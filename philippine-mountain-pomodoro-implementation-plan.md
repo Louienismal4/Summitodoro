@@ -1,5 +1,9 @@
 # Philippine Mountain Pomodoro App
 
+> Map architecture update: The Mapbox sections in this original plan are
+> historical. The implemented zero-cost renderer and basemap migration is
+> documented in `maplibre-osm-migration-plan.md`.
+
 ## Full Implementation Plan
 
 ## 1. Product Definition

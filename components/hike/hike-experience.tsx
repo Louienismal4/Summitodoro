@@ -9,6 +9,7 @@ import type {
   MountainMapHandle,
 } from "@/components/map/mountain-map";
 import { TrailFallback } from "@/components/map/trail-fallback";
+import { mountains } from "@/data/mountains";
 import { useExpeditionProfile } from "@/hooks/use-expedition-profile";
 import { useFocusSession } from "@/hooks/use-focus-session";
 import { formatRemainingTime } from "@/lib/timer/format-time";
@@ -24,7 +25,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const [trail, setTrail] = useState<PreparedTrail | null>(null);
   const [trailError, setTrailError] = useState<string | null>(null);
   const [mapUnavailable, setMapUnavailable] = useState<string | null>(null);
-  const [terrainEnabled, setTerrainEnabled] = useState(true);
   const [showAttribution, setShowAttribution] = useState(false);
   const mapRef = useRef<MountainMapHandle>(null);
 
@@ -88,14 +88,24 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
     <main className="game-shell">
       <ExpeditionSidebar
         mountainName={mountain.name}
+        mountainSlug={mountain.slug}
         mountainRegion={mountain.region}
         mountainDifficulty={mountain.difficulty}
+        mountainOptions={mountains.map(
+          ({ slug, name, region, difficulty }) => ({
+            slug,
+            name,
+            region,
+            difficulty,
+          }),
+        )}
         status={focus.session.status}
         durationMs={focus.session.durationMs}
         remainingMs={focus.remainingMs}
         progress={focus.progress}
         hydrated={focus.hydrated && game.hydrated}
-        checkpointCount={mountain.checkpoints.length}
+        checkpoints={mountain.checkpoints}
+        reachedCheckpointIds={focus.reachedCheckpointIds}
         reachedCheckpointCount={focus.reachedCheckpointIds.length}
         projectedXp={game.projectedReward.totalXp}
         profile={game.profile}
@@ -110,7 +120,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
       <section className="game-map" aria-label="Virtual expedition map">
         {!trail && !trailError && (
           <div className="map-loading" role="status">
-            <span /> Loading expedition terrain…
+            <span /> Loading expedition map…
           </div>
         )}
         {trail && coordinate && !mapUnavailable && (
@@ -175,19 +185,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
           >
             <span>⌗</span>
             <small>Fit trail</small>
-          </button>
-          <button
-            type="button"
-            className={terrainEnabled ? "active" : ""}
-            onClick={() => {
-              const next = mapRef.current?.toggleTerrain();
-              if (typeof next === "boolean") setTerrainEnabled(next);
-            }}
-            title="Toggle terrain"
-            aria-label="Toggle terrain"
-          >
-            <span>▰</span>
-            <small>Terrain</small>
           </button>
         </div>
 

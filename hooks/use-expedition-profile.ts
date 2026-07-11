@@ -24,10 +24,10 @@ export const useExpeditionProfile = (
     const stored = window.localStorage.getItem(STORAGE_KEY);
     const persisted = stored ? parseExpeditionProfile(stored) : null;
 
-    queueMicrotask(() => {
-      if (persisted) setProfile(persisted);
-      setHydrated(true);
-    });
+    /* eslint-disable react-hooks/set-state-in-effect -- synchronizing React with localStorage after hydration */
+    if (persisted) setProfile(persisted);
+    setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   useEffect(() => {

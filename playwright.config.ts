@@ -6,7 +6,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://localhost:3100",
     trace: "on-first-retry",
   },
   projects: [
@@ -14,9 +14,12 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    env: { ...process.env, NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: "" },
+    command: "npm run test:e2e:server",
+    url: "http://localhost:3100",
+    reuseExistingServer: false,
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_MAP_STYLE_URL: "https://tiles.openfreemap.org/styles/liberty",
+    },
   },
 });

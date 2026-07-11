@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
@@ -12,11 +12,12 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:server": "next build && next start -p 3100"
   },
   "dependencies": {
     "@turf/turf": "7.3.5",
-    "mapbox-gl": "3.26.0",
+    "maplibre-gl": "^5.24.0",
     "next": "^16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7",

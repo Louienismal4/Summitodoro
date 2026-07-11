@@ -11,5 +11,5 @@ export const generateStaticParams = () =>
 export default async function HikePage({ params }: PageProps) {
   const mountain = getMountain((await params).slug);
   if (!mountain) notFound();
-  return <HikeExperience mountain={mountain} />;
+  return <HikeExperience key={mountain.slug} mountain={mountain} />;
 }

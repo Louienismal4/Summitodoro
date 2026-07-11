@@ -47,17 +47,18 @@ export const useFocusSession = ({
       ? completeSessionIfElapsed(persisted.session, hydrationTime)
       : null;
 
-    // Hydration is an external storage response; defer its state update so the
-    // effect itself remains a pure subscription boundary.
-    queueMicrotask(() => {
-      if (recovered && persisted) {
-        setSession(recovered);
-        setReachedCheckpointIds(persisted.reachedCheckpointIds);
-        previousProgress.current = getProgress(recovered, hydrationTime);
-      }
-      setNow(hydrationTime);
-      setHydrated(true);
-    });
+    // Storage recovery must finish after the hydration commit but before the
+    // controls are enabled. Deferring this to a timer can be cancelled by an
+    // early map failure and leave the application permanently unhydrated.
+    /* eslint-disable react-hooks/set-state-in-effect -- synchronizing React with localStorage after hydration */
+    if (recovered && persisted) {
+      setSession(recovered);
+      setReachedCheckpointIds(persisted.reachedCheckpointIds);
+      previousProgress.current = getProgress(recovered, hydrationTime);
+    }
+    setNow(hydrationTime);
+    setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [storageKey]);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export const useFocusSession = ({
     };
 
     updateFromClock();
-    const interval = window.setInterval(updateFromClock, 250);
+    const interval = window.setInterval(updateFromClock, 1_000);
     return () => window.clearInterval(interval);
   }, [session.status]);
 

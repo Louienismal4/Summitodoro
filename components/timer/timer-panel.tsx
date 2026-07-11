@@ -57,6 +57,10 @@ export function TimerPanel({
           </button>
         ))}
       </div>
+      <p className="preset-help">
+        25 min is a classic Pomodoro focus block. Choose 5 or 15 min for a
+        shorter climb.
+      </p>
 
       <div className="timer-face" aria-live="off">
         <span className="timer-label">
