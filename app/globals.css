@@ -71,12 +71,19 @@ a {
   border-bottom: 1px solid var(--line);
 }
 .info-brand {
+  display: block;
+  width: 110px;
+  height: 44px;
+  overflow: visible;
   color: var(--ink-deep);
-  font:
-    700 22px Georgia,
-    "Times New Roman",
-    serif;
-  letter-spacing: -0.03em;
+}
+.info-brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(4);
+  transform-origin: left center;
 }
 .info-header nav {
   display: flex;
@@ -89,10 +96,11 @@ a {
   color: var(--pine);
 }
 .info-hero {
-  max-width: 760px;
+  max-width: 1080px;
   margin: 100px auto 64px;
 }
 .info-hero.compact {
+  max-width: 1080px;
   margin-bottom: 46px;
 }
 .info-hero h1 {
@@ -202,9 +210,38 @@ a {
 .release-entry h2 {
   margin-top: 0;
 }
+.release-category + .release-category {
+  margin-top: 20px;
+}
+.release-category {
+  padding: 0;
+}
+.release-category-added h3 {
+  background: #e8f2e8;
+}
+.release-category-changed h3 {
+  background: #e9f0f5;
+}
+.release-category-fixed h3 {
+  background: #fbe9e4;
+}
+.release-category h3 {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 9px;
+  border-radius: 5px;
+  color: var(--coral);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 .release-entry ul {
   margin: 14px 0 0;
   padding-left: 20px;
+}
+.release-category ul {
+  margin-top: 8px;
 }
 .release-entry li + li {
   margin-top: 7px;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -10,8 +11,15 @@ export default function AboutPage() {
   return (
     <main className="info-page">
       <header className="info-header">
-        <Link href="/" className="info-brand">
-          ▲ Summitodoro
+        <Link href="/" className="info-brand" aria-label="Summitodoro home">
+          <Image
+            className="info-brand-logo"
+            src="/summitodoro-logo.svg"
+            alt="Summitodoro"
+            width={1200}
+            height={700}
+            priority
+          />
         </Link>
         <nav aria-label="Site navigation">
           <Link href="/">Expedition</Link>

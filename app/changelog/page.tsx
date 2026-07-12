@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -11,45 +12,76 @@ const releases = [
     version: "Current",
     date: "July 2026",
     title: "Expedition dashboard refinements",
-    changes: [
-      "Added Supabase Google sign-in and saved hiker names.",
-      "Google profile photos can appear as the moving hiker on the map.",
-      "Standardized focus and checkpoint timers to HH:MM:SS.",
-      "Saved signed-in hikers' expedition summary, XP, focus time, summits, and focus chain to Supabase.",
-      "Made /hike the primary expedition route and added a guided first-use tour.",
-      "Refined the image-rich mountain selector and added selectable YouTube background streams.",
-      "Improved Pulag's fitted map view with a summit marker that remains anchored to the trail while zooming.",
-      "Kept the hiker profile available on mobile, centered the hiker above the mobile sheet, and introduced a compact landscape layout.",
-      "Added a logout action that clears local expedition data and returns to the sign-in screen.",
-    ],
+    categories: {
+      added: [
+        "Supabase Google sign-in and saved hiker names.",
+        "Saved signed-in hikers' expedition summary, XP, focus time, summits, and focus chain to Supabase.",
+        "A guided first-use tour for the primary /hike expedition route.",
+        "Selectable YouTube background streams in the mountain selector.",
+        "A logout action that clears local expedition data and returns to the sign-in screen.",
+      ],
+      changed: [
+        "Google profile photos can appear as the moving hiker on the map.",
+        "Standardized focus and checkpoint timers to HH:MM:SS.",
+        "Refined the image-rich mountain selector.",
+        "Kept the hiker profile available on mobile, centered the hiker above the mobile sheet, and introduced a compact landscape layout.",
+      ],
+      fixed: [
+        "Pulag's fitted map view now keeps the summit marker anchored to the trail while zooming.",
+      ],
+    },
   },
   {
     version: "0.2.0",
     date: "July 2026",
     title: "Mapped focus routes",
-    changes: [
-      "Added Mt. Ulap, Mt. Pulag, and Mt. Pinatubo route snapshots.",
-      "Migrated the interactive map to MapLibre and OpenFreeMap.",
-      "Added checkpoint breaks and longer focus-duration presets.",
-    ],
+    categories: {
+      added: [
+        "Mt. Ulap, Mt. Pulag, and Mt. Pinatubo route snapshots.",
+        "Checkpoint breaks and longer focus-duration presets.",
+      ],
+      changed: ["Migrated the interactive map to MapLibre and OpenFreeMap."],
+      fixed: [],
+    },
   },
   {
     version: "0.1.0",
     date: "Initial release",
     title: "The first ascent",
-    changes: [
-      "Introduced the virtual Philippine mountain focus dashboard.",
-      "Added local timer recovery, progression XP, and a route fallback.",
-    ],
+    categories: {
+      added: [
+        "The virtual Philippine mountain focus dashboard.",
+        "Local timer recovery, progression XP, and a route fallback.",
+      ],
+      changed: [],
+      fixed: [],
+    },
   },
 ];
+
+const categoryLabels = [
+  ["added", "Added"],
+  ["changed", "Changed"],
+  ["fixed", "Fixed"],
+] as const;
 
 export default function ChangelogPage() {
   return (
     <main className="info-page">
       <header className="info-header">
-          <Link href="/hike" className="info-brand">
-          ▲ Summitodoro
+        <Link
+          href="/hike"
+          className="info-brand"
+          aria-label="Summitodoro expedition"
+        >
+          <Image
+            className="info-brand-logo"
+            src="/summitodoro-logo.svg"
+            alt="Summitodoro"
+            width={1200}
+            height={700}
+            priority
+          />
         </Link>
         <nav aria-label="Site navigation">
           <Link href="/hike">Expedition</Link>
@@ -60,7 +92,7 @@ export default function ChangelogPage() {
       <section className="info-hero compact">
         <span className="section-kicker">Product updates</span>
         <h1>Changelog</h1>
-        <p>Follow the trail of improvements to Summitodoro.</p>
+        <p>All notable additions, changes, and fixes from newest to oldest.</p>
       </section>
 
       <section className="release-list" aria-label="Release history">
@@ -72,11 +104,27 @@ export default function ChangelogPage() {
             </div>
             <div>
               <h2>{release.title}</h2>
-              <ul>
-                {release.changes.map((change) => (
-                  <li key={change}>{change}</li>
-                ))}
-              </ul>
+              {categoryLabels.map(([key, label]) => {
+                const changes = release.categories[key];
+
+                if (changes.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <section
+                    key={key}
+                    className={`release-category release-category-${key}`}
+                  >
+                    <h3>{label}</h3>
+                    <ul>
+                      {changes.map((change) => (
+                        <li key={change}>{change}</li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
             </div>
           </article>
         ))}
