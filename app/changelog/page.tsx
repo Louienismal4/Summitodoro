@@ -9,11 +9,14 @@ export const metadata: Metadata = {
 
 const releases = [
   {
-    version: "Current",
+    version: "Current · 1.0.0",
     date: "July 2026",
     title: "Expedition dashboard refinements",
     categories: {
       added: [
+        "Trail Coin progression with server-authoritative session rewards, a transaction ledger, and permanent mountain unlocks.",
+        "Mountain level and Trail Coin requirements, locked-route explanations, unlock confirmation, and immediate balance updates.",
+        "Animated mountain selector and unlock feedback that respect reduced-motion preferences.",
         "Supabase Google sign-in and saved hiker names.",
         "Saved signed-in hikers' expedition summary, XP, focus time, summits, and focus chain to Supabase.",
         "A guided first-use tour for the primary /hike expedition route.",
@@ -21,6 +24,9 @@ const releases = [
         "A logout action that clears local expedition data and returns to the sign-in screen.",
       ],
       changed: [
+        "Made Mt. Pinatubo the default unlocked expedition and kept locked mountains unavailable until their requirements are met.",
+        "Moved Trail Coins beside the hiker name, enlarged dashboard and route-objective text, and clarified locked selector cards.",
+        "Restricted map navigation to each mountain's local area, including a Baguio-scale map extent for Mt. Pulag, to reduce unnecessary map requests.",
         "Google profile photos can appear as the moving hiker on the map.",
         "Standardized focus and checkpoint timers to HH:MM:SS.",
         "Refined the image-rich mountain selector.",

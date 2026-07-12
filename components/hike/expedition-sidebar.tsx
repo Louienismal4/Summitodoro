@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppTour } from "@/components/onboarding/app-tour";
 import { TimerPanel } from "@/components/timer/timer-panel";
+import type { MountainUnlockEligibility } from "@/lib/gamification/mountain-unlocks";
 import type { LevelProgress, ExpeditionProfile } from "@/types/gamification";
 import type { SessionStatus } from "@/types/session";
 
@@ -18,6 +20,9 @@ type MountainOption = {
   difficulty: string;
   elevationMasl: number;
   imagePath: string;
+  requiredLevel: number;
+  unlockCost: number;
+  eligibility: MountainUnlockEligibility;
 };
 
 type ExpeditionSidebarProps = {
@@ -31,6 +36,8 @@ type ExpeditionSidebarProps = {
   progress: number;
   hydrated: boolean;
   projectedXp: number;
+  projectedTrailCoins: number;
+  mountainLocked: boolean;
   profile: ExpeditionProfile;
   level: LevelProgress;
   onStart: () => void;
@@ -39,6 +46,7 @@ type ExpeditionSidebarProps = {
   onReset: () => void;
   onDurationChange: (durationMs: number) => void;
   onEditProfile: () => void;
+  onRequestUnlock: (mountain: MountainOption) => void;
 };
 
 type YouTubeStreamOption = {
@@ -90,6 +98,8 @@ export function ExpeditionSidebar({
   progress,
   hydrated,
   projectedXp,
+  projectedTrailCoins,
+  mountainLocked,
   profile,
   level,
   onStart,
@@ -98,10 +108,12 @@ export function ExpeditionSidebar({
   onReset,
   onDurationChange,
   onEditProfile,
+  onRequestUnlock,
 }: ExpeditionSidebarProps) {
   const router = useRouter();
   const [isMountainMenuOpen, setIsMountainMenuOpen] = useState(false);
   const mountainSelectorRef = useRef<HTMLElement>(null);
+  const mountainMenuRef = useRef<HTMLDivElement>(null);
   const youtubeStreamOptions = defaultYouTubeStreamOptions;
   const [selectedStreamIndex, setSelectedStreamIndex] = useState(0);
   const streamOption = youtubeStreamOptions[selectedStreamIndex];
@@ -122,6 +134,27 @@ export function ExpeditionSidebar({
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     return () =>
       document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [isMountainMenuOpen]);
+  useLayoutEffect(() => {
+    if (
+      !isMountainMenuOpen ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        mountainMenuRef.current,
+        { opacity: 0, y: -8, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.24,
+          ease: "power2.out",
+        },
+      );
+    }, mountainSelectorRef);
+    return () => context.revert();
   }, [isMountainMenuOpen]);
   return (
     <aside className="expedition-sidebar" aria-label="Expedition dashboard">
@@ -158,7 +191,11 @@ export function ExpeditionSidebar({
             <>
               <button
                 type="button"
-                className="mountain-picker-trigger"
+                className={
+                  isMountainMenuOpen
+                    ? "mountain-picker-trigger is-open"
+                    : "mountain-picker-trigger"
+                }
                 aria-haspopup="listbox"
                 aria-expanded={isMountainMenuOpen}
                 disabled={active}
@@ -167,15 +204,22 @@ export function ExpeditionSidebar({
                 <span className="mountain-picker-card-wrap">
                   <MountainOptionCard mountain={selectedMountain} />
                   <span
-                    className={`mountain-picker-chevron${
-                      isMountainMenuOpen ? "is-open" : ""
-                    }`}
+                    className={[
+                      "mountain-picker-chevron",
+                      isMountainMenuOpen && "is-open",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     aria-hidden="true"
                   />
                 </span>
               </button>
               {isMountainMenuOpen && (
-                <div className="mountain-picker-menu" role="listbox">
+                <div
+                  ref={mountainMenuRef}
+                  className="mountain-picker-menu"
+                  role="listbox"
+                >
                   {mountainOptions.map((mountain) => (
                     <button
                       key={mountain.slug}
@@ -187,10 +231,16 @@ export function ExpeditionSidebar({
                           ? "mountain-picker-option selected"
                           : "mountain-picker-option"
                       }
+                      aria-label={`${mountain.name}, ${getMountainStatusLabel(mountain)}`}
                       onClick={() => {
                         setIsMountainMenuOpen(false);
-                        if (mountain.slug !== mountainSlug) {
+                        if (
+                          mountain.eligibility === "unlocked" &&
+                          mountain.slug !== mountainSlug
+                        ) {
                           router.push(`/hike/${mountain.slug}`);
+                        } else if (mountain.eligibility !== "unlocked") {
+                          onRequestUnlock(mountain);
                         }
                       }}
                     >
@@ -227,7 +277,9 @@ export function ExpeditionSidebar({
           </div>
           <div className="mission-reward-row">
             <span>Mission reward</span>
-            <strong>+{projectedXp} XP</strong>
+            <strong>
+              +{projectedXp} XP · +{projectedTrailCoins} Trail Coins
+            </strong>
           </div>
         </section>
 
@@ -239,6 +291,7 @@ export function ExpeditionSidebar({
           shortBreakRemainingMs={shortBreakRemainingMs}
           progress={progress}
           hydrated={hydrated}
+          locked={mountainLocked}
           onStart={onStart}
           onPause={onPause}
           onResume={onResume}
@@ -316,7 +369,16 @@ export function ExpeditionSidebar({
         </button>
         <div className="hiker-profile-details">
           <small>Hiker profile</small>
-          <strong>{profile.displayName}</strong>
+          <div className="profile-name-row">
+            <strong>{profile.displayName}</strong>
+            <div
+              className="trail-coin-balance profile-trail-coin-balance"
+              aria-label={`${profile.trailCoins} Trail Coins`}
+            >
+              <span aria-hidden="true">◆</span>
+              <strong>{profile.trailCoins.toLocaleString()}</strong>
+            </div>
+          </div>
           <span>
             Level {level.level} · {profile.xp} XP
           </span>
@@ -352,7 +414,13 @@ export function ExpeditionSidebar({
 
 function MountainOptionCard({ mountain }: { mountain: MountainOption }) {
   return (
-    <span className="mountain-option-card">
+    <span
+      className={
+        mountain.eligibility === "unlocked"
+          ? "mountain-option-card"
+          : "mountain-option-card locked"
+      }
+    >
       <span className="mountain-option-image" aria-hidden="true">
         <Image
           src={mountain.imagePath}
@@ -370,10 +438,25 @@ function MountainOptionCard({ mountain }: { mountain: MountainOption }) {
           {mountain.province} · {mountain.region}
         </small>
         <em>{mountain.elevationMasl.toLocaleString()} MASL</em>
+        <i>{getMountainStatusLabel(mountain)}</i>
       </span>
       <b className={`difficulty-${mountain.difficulty}`}>
         {mountain.difficulty}
       </b>
+      {mountain.eligibility !== "unlocked" && (
+        <span className="mountain-lock-badge" aria-hidden="true">
+          🔒
+        </span>
+      )}
     </span>
   );
+}
+
+function getMountainStatusLabel(mountain: MountainOption) {
+  if (mountain.eligibility === "unlocked") return "Unlocked";
+  if (mountain.eligibility === "locked_by_level")
+    return `Level ${mountain.requiredLevel} required`;
+  if (mountain.eligibility === "locked_by_currency")
+    return `${mountain.unlockCost} Trail Coins required`;
+  return `Unlock for ${mountain.unlockCost} Trail Coins`;
 }
