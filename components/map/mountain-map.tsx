@@ -6,7 +6,7 @@ import type { LngLatBounds, Map as MapLibreMap, Marker } from "maplibre-gl";
 import { mapStyleUrl } from "@/lib/map/config";
 import type { Coordinate, TrailFeature } from "@/types/trail";
 
-const MAP_MIN_ZOOM = 14;
+const MAP_MIN_ZOOM = 13;
 const MAP_MAX_ZOOM = 21;
 const HIKER_RECENTER_INTERVAL_MS = 10_000;
 
@@ -162,6 +162,63 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
                 ],
               },
             });
+            // Keep the summit as a map-native feature rather than an HTML
+            // marker. MapLibre reprojects this source with the trail on every
+            // camera change, so it cannot drift from Pulag's endpoint when the
+            // route is fitted or the user zooms out.
+            map.addSource("summitodoro-summit", {
+              type: "geojson",
+              data: {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                  type: "Point",
+                  coordinates: end,
+                },
+              },
+            });
+            map.addLayer({
+              id: "summit-marker-base",
+              type: "circle",
+              source: "summitodoro-summit",
+              paint: {
+                "circle-radius": 15,
+                "circle-color": "#0aa256",
+                "circle-stroke-color": "#ffffff",
+                "circle-stroke-width": 3,
+                "circle-opacity": 1,
+              },
+            });
+            map.addLayer({
+              id: "summit-marker-icon",
+              type: "symbol",
+              source: "summitodoro-summit",
+              layout: {
+                "text-field": "▲",
+                "text-size": 10,
+                "text-anchor": "center",
+              },
+              paint: {
+                "text-color": "#ffffff",
+              },
+            });
+            map.addLayer({
+              id: "summit-marker-label",
+              type: "symbol",
+              source: "summitodoro-summit",
+              layout: {
+                "text-field": "SUMMIT",
+                "text-size": 6,
+                "text-letter-spacing": 0.05,
+                "text-offset": [0, 3.5],
+                "text-anchor": "top",
+              },
+              paint: {
+                "text-color": "#515952",
+                "text-halo-color": "rgba(255, 255, 253, 0.94)",
+                "text-halo-width": 3,
+              },
+            });
 
             const addStaticMarker = (
               markerCoordinate: Coordinate,
@@ -184,7 +241,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
               element.append(icon, caption);
               if (id) checkpointElements.set(id, element);
               staticMarkersRef.current.push(
-                new maplibregl.Marker({ element, anchor: "bottom" })
+                new maplibregl.Marker({ element, anchor: "center" })
                   .setLngLat(markerCoordinate)
                   .addTo(map),
               );
@@ -199,8 +256,6 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
                 checkpoint.id,
               ),
             );
-            addStaticMarker(end, "summit", "Summit");
-
             const hikerElement = document.createElement("div");
             hikerElement.className = "map-hiker-marker";
             hikerElement.setAttribute("aria-label", "Virtual hiker position");

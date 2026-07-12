@@ -7,6 +7,8 @@ export const mountains = [
     name: "Mt. Ulap",
     region: "Cordillera Administrative Region",
     province: "Benguet",
+    elevationMasl: 1846,
+    imagePath: "/images/mountains/mt-ulap.jpg",
     tagline: "Find your rhythm above the clouds.",
     description:
       "A virtual focus ascent along the mapped Philex Ridge Trail on Mt. Ulap. This route snapshot is not a hiking guide.",
@@ -48,6 +50,8 @@ export const mountains = [
     name: "Mt. Pulag",
     region: "Cordillera Administrative Region",
     province: "Benguet",
+    elevationMasl: 2926,
+    imagePath: "/images/mountains/mt-pulag.jpg",
     tagline: "Focus steadily above the cloudline.",
     description:
       "A virtual focus ascent along the mapped Ambangeg Trail to Mt. Pulag. This route snapshot is not a hiking guide.",
@@ -89,6 +93,8 @@ export const mountains = [
     name: "Mt. Pinatubo",
     region: "Central Luzon",
     province: "Zambales",
+    elevationMasl: 1486,
+    imagePath: "/images/mountains/mt-pinatubo.jpg",
     tagline: "Cross the quiet lahar landscape, one task at a time.",
     description:
       "A virtual focus ascent along the mapped route to the Mt. Pinatubo crater. This route snapshot is not a hiking guide.",

@@ -5,6 +5,7 @@ import type {
   LevelProgress,
   SessionReward,
 } from "@/types/gamification";
+import type { MountainDifficulty } from "@/types/mountain";
 
 const XP_PER_LEVEL = 500;
 
@@ -37,15 +38,17 @@ export const createExpeditionProfile = (): ExpeditionProfile => ({
 export const calculateSessionReward = (
   durationMs: number,
   reachedCheckpointCount: number,
+  difficulty: MountainDifficulty = "moderate",
 ): SessionReward => {
-  const focusXp = Math.floor(durationMs / 60_000) * 10;
-  const checkpointXp = Math.max(0, reachedCheckpointCount) * 25;
-  const summitXp = 50;
+  const difficultyMultiplier = { easy: 0.8, moderate: 1, hard: 1.4 }[difficulty];
+  const focusXp = Math.floor(durationMs / 60_000) * 10 * difficultyMultiplier;
+  const checkpointXp = Math.max(0, reachedCheckpointCount) * 25 * difficultyMultiplier;
+  const summitXp = 50 * difficultyMultiplier;
   return {
     focusXp,
     checkpointXp,
     summitXp,
-    totalXp: focusXp + checkpointXp + summitXp,
+    totalXp: Math.round(focusXp + checkpointXp + summitXp),
   };
 };
 
@@ -67,12 +70,13 @@ export const awardCompletedSession = (
   sessionId: string,
   durationMs: number,
   reachedCheckpointCount: number,
+  difficulty: MountainDifficulty = "moderate",
 ): { profile: ExpeditionProfile; reward: SessionReward | null } => {
   if (profile.completedSessionIds.includes(sessionId)) {
     return { profile, reward: null };
   }
 
-  const reward = calculateSessionReward(durationMs, reachedCheckpointCount);
+  const reward = calculateSessionReward(durationMs, reachedCheckpointCount, difficulty);
   return {
     reward,
     profile: {

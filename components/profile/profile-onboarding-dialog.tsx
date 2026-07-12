@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 
 import { supabase } from "@/lib/supabase/client";
 
 type ProfileOnboardingDialogProps = {
   initialName: string;
   onComplete: (displayName: string, avatarUrl: string | null) => void;
+  mode?: "onboarding" | "edit";
+  onClose?: () => void;
 };
 
 export function ProfileOnboardingDialog({
   initialName,
   onComplete,
+  mode = "onboarding",
+  onClose,
 }: ProfileOnboardingDialogProps) {
   const [displayName, setDisplayName] = useState(initialName);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -95,6 +100,7 @@ export function ProfileOnboardingDialog({
       return;
     }
     onComplete(displayName, avatarUrl);
+    onClose?.();
   };
 
   return (
@@ -108,9 +114,15 @@ export function ProfileOnboardingDialog({
         <span className="profile-onboarding-emblem" aria-hidden="true">
           🥾
         </span>
-        <p className="section-kicker">Welcome to Summitodoro</p>
+        <p className="section-kicker">
+          {mode === "edit" ? "Hiker profile" : "Welcome to Summitodoro"}
+        </p>
         <h2 id="profile-onboarding-title">
-          {user ? "Name your hiker" : "Continue your expedition"}
+          {mode === "edit"
+            ? "Edit hiker profile"
+            : user
+              ? "Name your hiker"
+              : "Continue your expedition"}
         </h2>
         {!user && (
           <p>Sign in with Google first, then choose the name for your hiker.</p>
@@ -133,7 +145,11 @@ export function ProfileOnboardingDialog({
               disabled={!displayName.trim() || saving}
               onClick={() => void saveProfile()}
             >
-              {saving ? "Saving profile…" : "Save hiker profile"}
+              {saving
+                ? "Saving profile…"
+                : mode === "edit"
+                  ? "Save changes"
+                  : "Save hiker profile"}
             </button>
           </>
         )}
@@ -153,6 +169,19 @@ export function ProfileOnboardingDialog({
           )
         )}
         {authError && <p className="google-sign-in-note">{authError}</p>}
+        <div className="profile-dialog-links">
+          <Link href="/about">About Summitodoro</Link>
+          <Link href="/changelog">Changelog</Link>
+        </div>
+        {mode === "edit" && onClose && (
+          <button
+            type="button"
+            className="profile-dialog-close"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        )}
       </section>
     </div>
   );

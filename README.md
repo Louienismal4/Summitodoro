@@ -30,7 +30,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000` to enter the full-screen expedition dashboard directly. The interactive map uses OpenFreeMap's free Liberty style by default and requires no account or API key. Set `NEXT_PUBLIC_MAP_STYLE_URL` only when you need to override that provider-neutral style URL. If the map service or WebGL is unavailable, the app deliberately uses the illustrated fallback while the timer remains fully functional.
+Open `http://localhost:3000/hike` to enter the full-screen expedition dashboard. The root URL redirects there automatically. The interactive map uses OpenFreeMap's free Liberty style by default and requires no account or API key. Set `NEXT_PUBLIC_MAP_STYLE_URL` only when you need to override that provider-neutral style URL. If the map service or WebGL is unavailable, the app deliberately uses the illustrated fallback while the timer remains fully functional.
 
 ## Optional Supabase Google sign-in
 
@@ -41,9 +41,34 @@ then set `NEXT_PUBLIC_SUPABASE_URL` and
 `NEXT_PUBLIC_SITE_URL=https://summitodoro.vercel.app` for the production
 deployment. The Google
 profile name and picture personalize the local hiker profile after sign-in.
-Run `supabase/migrations/20260711_create_hiker_profiles.sql` in the Supabase
-SQL Editor before using the app: it creates the per-user profile table and its
-row-level security policies.
+Run both migration files in `supabase/migrations/` in the Supabase SQL Editor
+before using the app. They create the per-user profile table, its row-level
+security policies, and the expedition summary fields. Once a signed-in hiker's
+profile is available, their XP, focus time, summit count, focus chain, and
+completed-session history are synced to Supabase. Local storage remains an
+offline fallback for visitors who are not signed in.
+
+## Mountain images and YouTube stream
+
+Add your own mountain images before deploying by placing these files in the
+repository, then committing and deploying them through Vercel:
+
+- `public/images/mountains/mt-ulap.jpg`
+- `public/images/mountains/mt-pulag.jpg`
+- `public/images/mountains/mt-pinatubo.jpg`
+
+They are displayed in the mountain selector with a built-in illustration-style
+fallback until you add them. Static `public/` files are deployed from the Git
+repository; they cannot be uploaded to an already deployed Vercel project. If
+you need uploads from an admin screen later, use Vercel Blob with authenticated
+storage instead.
+
+The sidebar player embeds a hardcoded set of YouTube presets that users can
+cycle through with the previous and next controls. To change the available
+streams, update `defaultYouTubeStreamOptions` in
+`components/hike/expedition-sidebar.tsx`. A YouTube live stream works too, but
+use the currently active live video URL because older live recordings can become
+unavailable after YouTube rotates them.
 
 ## Quality checks
 
@@ -61,10 +86,10 @@ npm run test:e2e
 
 - `lib/timer/focus-session.ts` is the pure timestamp-based timer engine. Render intervals only refresh the view; they are never the source of elapsed time.
 - `hooks/use-focus-session.ts` owns browser persistence and refresh recovery. Persisted values are validated with Zod before use.
-- `lib/gamification/progression.ts` calculates XP, levels, and idempotent completion rewards; `hooks/use-expedition-profile.ts` persists the local profile.
+- `lib/gamification/progression.ts` calculates XP, levels, and idempotent completion rewards; `hooks/use-expedition-profile.ts` persists the local profile and synchronizes signed-in users to Supabase.
 - `lib/trail/trail-engine.ts` validates external GeoJSON, calculates route length once, generates 500 samples once, and uses lightweight interpolation during the session.
 - `components/map/mountain-map.tsx` creates one MapLibre instance per mounted hike and updates only the marker and trail paint as progress changes.
 - The map renders distinct completed and remaining trail layers, trailhead/checkpoint/summit markers, and imperative camera controls without remounting during session updates.
 - `public/data/trails/` contains versioned, simplified local snapshots of the OpenStreetMap ways listed in each mountain's attribution panel. Those snapshots are licensed under ODbL 1.0.
 
-Authentication, Supabase persistence, rewards, additional mountains, and trail administration are intentionally deferred to later phases.
+Additional mountains and trail administration are intentionally deferred to later phases.

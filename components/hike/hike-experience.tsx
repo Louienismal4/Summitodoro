@@ -13,7 +13,9 @@ import { TrailFallback } from "@/components/map/trail-fallback";
 import { mountains } from "@/data/mountains";
 import { useExpeditionProfile } from "@/hooks/use-expedition-profile";
 import { useFocusSession } from "@/hooks/use-focus-session";
+import { supabase } from "@/lib/supabase/client";
 import { formatRemainingTime } from "@/lib/timer/format-time";
+import { getTimedMilestones } from "@/lib/timer/milestones";
 import {
   getCoordinateAtProgress,
   prepareTrail,
@@ -27,7 +29,20 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const [trailError, setTrailError] = useState<string | null>(null);
   const [mapUnavailable, setMapUnavailable] = useState<string | null>(null);
   const [showAttribution, setShowAttribution] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
   const mapRef = useRef<MountainMapHandle>(null);
+
+  useEffect(() => {
+    if (!supabase || !window.location.hash) return;
+
+    void supabase.auth.getSession().finally(() => {
+      window.history.replaceState(
+        {},
+        document.title,
+        `${window.location.pathname}${window.location.search}`,
+      );
+    });
+  }, []);
 
   const focus = useFocusSession({
     storageKey: `summitodoro:session:${mountain.slug}`,
@@ -37,6 +52,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const game = useExpeditionProfile(
     focus.session,
     focus.reachedCheckpointIds.length,
+    mountain.difficulty,
   );
 
   useEffect(() => {
@@ -78,6 +94,10 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const nextCheckpoint = mountain.checkpoints.find(
     (checkpoint) => !focus.reachedCheckpointIds.includes(checkpoint.id),
   );
+  const timedMilestones = useMemo(
+    () => getTimedMilestones(mountain.checkpoints, focus.session.durationMs),
+    [focus.session.durationMs, mountain.checkpoints],
+  );
   const handleMapUnavailable = useCallback(
     (reason: string) => setMapUnavailable(reason),
     [],
@@ -88,16 +108,24 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   return (
     <main className="game-shell">
       <ExpeditionSidebar
-        mountainName={mountain.name}
         mountainSlug={mountain.slug}
-        mountainRegion={mountain.region}
-        mountainDifficulty={mountain.difficulty}
         mountainOptions={mountains.map(
-          ({ slug, name, region, difficulty }) => ({
+          ({
             slug,
             name,
             region,
+            province,
             difficulty,
+            elevationMasl,
+            imagePath,
+          }) => ({
+            slug,
+            name,
+            region,
+            province,
+            difficulty,
+            elevationMasl,
+            imagePath,
           }),
         )}
         status={focus.session.status}
@@ -107,9 +135,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         shortBreakRemainingMs={focus.shortBreakRemainingMs}
         progress={focus.progress}
         hydrated={focus.hydrated && game.hydrated}
-        checkpoints={mountain.checkpoints}
-        reachedCheckpointIds={focus.reachedCheckpointIds}
-        reachedCheckpointCount={focus.reachedCheckpointIds.length}
         projectedXp={game.projectedReward.totalXp}
         profile={game.profile}
         level={game.level}
@@ -118,6 +143,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         onResume={focus.resume}
         onReset={focus.reset}
         onDurationChange={focus.setDuration}
+        onEditProfile={() => setShowProfileEditor(true)}
       />
 
       <section className="game-map" aria-label="Virtual expedition map">
@@ -200,63 +226,73 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
 
         <div className="checkpoint-dock">
           <div className="checkpoint-dock-heading">
-            <span>⚑ Route objectives</span>
+            <div>
+              <span>⚑ Route objectives</span>
+              <p>
+                Checkpoint times scale with your selected focus duration.
+                Pausing freezes both the timer and hiker.
+              </p>
+            </div>
             <strong>
               {focus.reachedCheckpointIds.length}/{mountain.checkpoints.length}{" "}
               complete
             </strong>
           </div>
-          <div className="checkpoint-route">
-            <div className="checkpoint-node reached">
+          <div
+            className="checkpoint-route"
+            style={{
+              gridTemplateColumns: `repeat(${mountain.checkpoints.length + 2}, minmax(0, 1fr))`,
+            }}
+          >
+            <button
+              type="button"
+              className="checkpoint-node reached"
+              aria-label={`Trailhead: unlocks at 00:00:00 elapsed, ${formatRemainingTime(focus.session.durationMs)} left`}
+            >
               <span>✓</span>
               <small>Trailhead</small>
-            </div>
-            {mountain.checkpoints.map((checkpoint) => {
-              const reached = focus.reachedCheckpointIds.includes(
-                checkpoint.id,
-              );
+              <span className="checkpoint-tooltip" role="tooltip">
+                Unlocks at 00:00:00 elapsed ·{" "}
+                {formatRemainingTime(focus.session.durationMs)} left
+              </span>
+            </button>
+            {timedMilestones.map((milestone) => {
+              const reached = focus.reachedCheckpointIds.includes(milestone.id);
               return (
-                <div
-                  key={checkpoint.id}
+                <button
+                  key={milestone.id}
+                  type="button"
                   className={
                     reached ? "checkpoint-node reached" : "checkpoint-node"
                   }
+                  aria-label={`${milestone.name}: unlocks at ${formatRemainingTime(milestone.elapsedMs)} elapsed, ${formatRemainingTime(milestone.remainingMs)} left`}
                 >
                   <span>{reached ? "✓" : "+25"}</span>
-                  <small>{checkpoint.name}</small>
-                </div>
+                  <small>{milestone.name}</small>
+                  <span className="checkpoint-tooltip" role="tooltip">
+                    Unlocks at {formatRemainingTime(milestone.elapsedMs)}{" "}
+                    elapsed · {formatRemainingTime(milestone.remainingMs)} left
+                  </span>
+                </button>
               );
             })}
-            <div
+            <button
+              type="button"
               className={
                 focus.session.status === "completed"
                   ? "checkpoint-node reached summit"
                   : "checkpoint-node summit"
               }
+              aria-label={`Summit: unlocks at ${formatRemainingTime(focus.session.durationMs)} elapsed, 00:00:00 left`}
             >
-              <span>▲</span>
+              <span>{focus.session.status === "completed" ? "✓" : "▲"}</span>
               <small>Summit</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="map-duration-dock" aria-label="Focus duration presets">
-          <span>
-            <i /> Focus duration
-          </span>
-          {[30, 45, 60, 90, 120].map((minutes) => (
-            <button
-              key={minutes}
-              type="button"
-              className={
-                focus.session.durationMs === minutes * 60_000 ? "active" : ""
-              }
-              disabled={focus.session.status !== "idle" || !focus.hydrated}
-              onClick={() => focus.setDuration(minutes * 60_000)}
-            >
-              {minutes}m
+              <span className="checkpoint-tooltip" role="tooltip">
+                Unlocks at {formatRemainingTime(focus.session.durationMs)}{" "}
+                elapsed · 00:00:00 left
+              </span>
             </button>
-          ))}
+          </div>
         </div>
 
         <div className="map-attribution-wrap">
@@ -358,6 +394,16 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
           onComplete={game.updateIdentity}
         />
       )}
+      {game.hydrated &&
+        game.profile.onboardingComplete &&
+        showProfileEditor && (
+          <ProfileOnboardingDialog
+            initialName={game.profile.displayName}
+            mode="edit"
+            onComplete={game.updateIdentity}
+            onClose={() => setShowProfileEditor(false)}
+          />
+        )}
     </main>
   );
 }

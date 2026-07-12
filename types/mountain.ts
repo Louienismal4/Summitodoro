@@ -8,6 +8,8 @@ export type Mountain = {
   name: string;
   region: string;
   province: string;
+  elevationMasl: number;
+  imagePath: string;
   tagline: string;
   description: string;
   difficulty: MountainDifficulty;
