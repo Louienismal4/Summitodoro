@@ -10,6 +10,20 @@ const MAP_MIN_ZOOM = 13;
 const MAP_MAX_ZOOM = 21;
 const HIKER_RECENTER_INTERVAL_MS = 10_000;
 
+const getHikerRecenteringOffset = (): [number, number] => {
+  if (
+    typeof window === "undefined" ||
+    !window.matchMedia("(max-width: 820px) and (orientation: portrait)").matches
+  ) {
+    return [0, 0];
+  }
+
+  const sheetHeight = document.querySelector<HTMLElement>(
+    ".expedition-sidebar",
+  )?.getBoundingClientRect().height;
+  return [0, -Math.round((sheetHeight ?? window.innerHeight * 0.46) / 2)];
+};
+
 export type MapCheckpoint = {
   id: string;
   name: string;
@@ -110,7 +124,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             minZoom: MAP_MIN_ZOOM,
             maxZoom: MAP_MAX_ZOOM,
             fitBoundsOptions: { padding: 80 },
-            attributionControl: {},
+            attributionControl: false,
           });
           mapRef.current = map;
           map.addControl(
@@ -273,6 +287,16 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             })
               .setLngLat(initialCoordinateRef.current)
               .addTo(map);
+
+            window.requestAnimationFrame(() => {
+              if (disposed) return;
+              map.easeTo({
+                center: coordinateRef.current,
+                offset: getHikerRecenteringOffset(),
+                duration: 0,
+                essential: true,
+              });
+            });
           });
 
           map.on("error", (event) => {
@@ -327,6 +351,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
 
         map.easeTo({
           center: coordinateRef.current,
+          offset: getHikerRecenteringOffset(),
           duration: 800,
           essential: true,
         });

@@ -6,6 +6,18 @@ import Link from "next/link";
 
 import { supabase } from "@/lib/supabase/client";
 
+const clearSummitodoroBrowserData = () => {
+  [window.localStorage, window.sessionStorage].forEach((storage) => {
+    const keys = Array.from(
+      { length: storage.length },
+      (_, index) => storage.key(index),
+    );
+    keys.forEach((key) => {
+      if (key?.startsWith("summitodoro:")) storage.removeItem(key);
+    });
+  });
+};
+
 type ProfileOnboardingDialogProps = {
   initialName: string;
   onComplete: (displayName: string, avatarUrl: string | null) => void;
@@ -24,6 +36,7 @@ export function ProfileOnboardingDialog({
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(() => supabase !== null);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -103,6 +116,23 @@ export function ProfileOnboardingDialog({
     onClose?.();
   };
 
+  const signOut = async () => {
+    if (!supabase) return;
+
+    setLoggingOut(true);
+    setAuthError(null);
+    const { error } = await supabase.auth.signOut();
+    setLoggingOut(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    clearSummitodoroBrowserData();
+    window.location.replace("/hike");
+  };
+
   return (
     <div className="profile-onboarding-backdrop" role="presentation">
       <section
@@ -169,6 +199,16 @@ export function ProfileOnboardingDialog({
           )
         )}
         {authError && <p className="google-sign-in-note">{authError}</p>}
+        {mode === "edit" && user && (
+          <button
+            type="button"
+            className="profile-dialog-logout"
+            disabled={loggingOut}
+            onClick={() => void signOut()}
+          >
+            {loggingOut ? "Logging out…" : "Log out"}
+          </button>
+        )}
         <div className="profile-dialog-links">
           <Link href="/about">About Summitodoro</Link>
           <Link href="/changelog">Changelog</Link>

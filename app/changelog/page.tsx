@@ -19,6 +19,8 @@ const releases = [
       "Made /hike the primary expedition route and added a guided first-use tour.",
       "Refined the image-rich mountain selector and added selectable YouTube background streams.",
       "Improved Pulag's fitted map view with a summit marker that remains anchored to the trail while zooming.",
+      "Kept the hiker profile available on mobile, centered the hiker above the mobile sheet, and introduced a compact landscape layout.",
+      "Added a logout action that clears local expedition data and returns to the sign-in screen.",
     ],
   },
   {
