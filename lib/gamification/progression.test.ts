@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   awardCompletedSession,
+  calculateTrailCoinReward,
   calculateSessionReward,
   createExpeditionProfile,
   getLevelProgress,
@@ -16,6 +17,7 @@ describe("expedition progression", () => {
       checkpointXp: 50,
       summitXp: 50,
       totalXp: 350,
+      trailCoins: 50,
     });
   });
 
@@ -30,9 +32,16 @@ describe("expedition progression", () => {
     );
 
     expect(first.reward?.totalXp).toBe(150);
+    expect(first.reward?.trailCoins).toBe(10);
+    expect(first.profile.trailCoins).toBe(10);
     expect(first.profile.completedSummits).toBe(1);
     expect(duplicate.reward).toBeNull();
     expect(duplicate.profile).toBe(first.profile);
+  });
+
+  it("calculates Trail Coins from completed focus minutes only", () => {
+    expect(calculateTrailCoinReward(5 * 60_000 + 59_999)).toBe(10);
+    expect(calculateTrailCoinReward(-1)).toBe(0);
   });
 
   it("derives level progress from total XP", () => {

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExpeditionSidebar } from "@/components/hike/expedition-sidebar";
 import { MountainMap } from "@/components/map/mountain-map";
 import { ProfileOnboardingDialog } from "@/components/profile/profile-onboarding-dialog";
+import { UnlockMountainDialog } from "@/components/progression/unlock-mountain-dialog";
 import type {
   MapCheckpoint,
   MountainMapHandle,
@@ -13,6 +14,7 @@ import { TrailFallback } from "@/components/map/trail-fallback";
 import { mountains } from "@/data/mountains";
 import { useExpeditionProfile } from "@/hooks/use-expedition-profile";
 import { useFocusSession } from "@/hooks/use-focus-session";
+import { useMountainUnlocks } from "@/hooks/use-mountain-unlocks";
 import { supabase } from "@/lib/supabase/client";
 import { formatRemainingTime } from "@/lib/timer/format-time";
 import { getTimedMilestones } from "@/lib/timer/milestones";
@@ -30,6 +32,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const [mapUnavailable, setMapUnavailable] = useState<string | null>(null);
   const [showAttribution, setShowAttribution] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [unlockMountain, setUnlockMountain] = useState<Mountain | null>(null);
   const mapRef = useRef<MountainMapHandle>(null);
 
   useEffect(() => {
@@ -53,6 +56,11 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
     focus.session,
     focus.reachedCheckpointIds.length,
     mountain.difficulty,
+  );
+  const mountainUnlocks = useMountainUnlocks(
+    mountains,
+    game.level,
+    game.profile.trailCoins,
   );
 
   useEffect(() => {
@@ -104,30 +112,40 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   );
   const fallbackReason = trailError ?? mapUnavailable;
   const reward = game.lastReward ?? game.projectedReward;
+  const currentEligibility = mountainUnlocks.eligibilityFor(mountain);
+  const mountainLocked =
+    mountainUnlocks.hydrated && currentEligibility !== "unlocked";
+
+  const requestUnlock = useCallback((mountainOption: { slug: string }) => {
+    const selected = mountains.find(
+      (candidate) => candidate.slug === mountainOption.slug,
+    );
+    if (selected) setUnlockMountain(selected);
+  }, []);
+
+  const confirmUnlock = useCallback(async () => {
+    if (!unlockMountain) throw new Error("Select a mountain to unlock.");
+    const result = await mountainUnlocks.unlock(unlockMountain);
+    game.applyMountainUnlock(result.spent, result.remainingTrailCoins);
+    return result;
+  }, [game, mountainUnlocks, unlockMountain]);
 
   return (
     <main className="game-shell">
       <ExpeditionSidebar
         mountainSlug={mountain.slug}
-        mountainOptions={mountains.map(
-          ({
-            slug,
-            name,
-            region,
-            province,
-            difficulty,
-            elevationMasl,
-            imagePath,
-          }) => ({
-            slug,
-            name,
-            region,
-            province,
-            difficulty,
-            elevationMasl,
-            imagePath,
-          }),
-        )}
+        mountainOptions={mountains.map((mountainOption) => ({
+          slug: mountainOption.slug,
+          name: mountainOption.name,
+          region: mountainOption.region,
+          province: mountainOption.province,
+          difficulty: mountainOption.difficulty,
+          elevationMasl: mountainOption.elevationMasl,
+          imagePath: mountainOption.imagePath,
+          requiredLevel: mountainOption.requiredLevel,
+          unlockCost: mountainOption.unlockCost,
+          eligibility: mountainUnlocks.eligibilityFor(mountainOption),
+        }))}
         status={focus.session.status}
         durationMs={focus.session.durationMs}
         remainingMs={focus.remainingMs}
@@ -136,6 +154,8 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         progress={focus.progress}
         hydrated={focus.hydrated && game.hydrated}
         projectedXp={game.projectedReward.totalXp}
+        projectedTrailCoins={game.projectedReward.trailCoins}
+        mountainLocked={mountainLocked}
         profile={game.profile}
         level={game.level}
         onStart={focus.start}
@@ -144,6 +164,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         onReset={focus.reset}
         onDurationChange={focus.setDuration}
         onEditProfile={() => setShowProfileEditor(true)}
+        onRequestUnlock={requestUnlock}
       />
 
       <section className="game-map" aria-label="Virtual expedition map">
@@ -161,6 +182,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
             checkpoints={mapCheckpoints}
             reachedCheckpointIds={focus.reachedCheckpointIds}
             hikerAvatarUrl={game.profile.avatarUrl}
+            navigationBounds={mountain.mapNavigationBounds}
             onUnavailable={handleMapUnavailable}
           />
         )}
@@ -323,6 +345,28 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
             ⓘ
           </button>
         </div>
+        {mountainLocked && (
+          <div
+            className="locked-mountain-overlay"
+            role="region"
+            aria-label={`${mountain.name} unlock requirements`}
+          >
+            <span aria-hidden="true">◆</span>
+            <strong>{mountain.name} is locked</strong>
+            <p>
+              {currentEligibility === "locked_by_level"
+                ? `Reach Level ${mountain.requiredLevel} to start this trail.`
+                : `You need ${Math.max(0, mountain.unlockCost - game.profile.trailCoins)} more Trail Coins.`}
+            </p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setUnlockMountain(mountain)}
+            >
+              View requirements
+            </button>
+          </div>
+        )}
       </section>
 
       {focus.latestCheckpoint && (
@@ -375,7 +419,9 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
               </div>
               <div className="reward-total">
                 <small>Total earned</small>
-                <strong>+{reward.totalXp} XP</strong>
+                <strong>
+                  +{reward.totalXp} XP · +{reward.trailCoins} Trail Coins
+                </strong>
               </div>
             </div>
             <button
@@ -392,6 +438,16 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         <ProfileOnboardingDialog
           initialName={game.profile.displayName}
           onComplete={game.updateIdentity}
+        />
+      )}
+      {unlockMountain && (
+        <UnlockMountainDialog
+          mountain={unlockMountain}
+          eligibility={mountainUnlocks.eligibilityFor(unlockMountain)}
+          currentLevel={game.level.level}
+          trailCoins={game.profile.trailCoins}
+          onConfirm={confirmUnlock}
+          onClose={() => setUnlockMountain(null)}
         />
       )}
       {game.hydrated &&

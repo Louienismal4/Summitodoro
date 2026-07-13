@@ -4,6 +4,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { LngLatBounds, Map as MapLibreMap, Marker } from "maplibre-gl";
 
 import { mapStyleUrl } from "@/lib/map/config";
+import {
+  getTrailNavigationBounds,
+  type TrailNavigationBounds,
+} from "@/lib/map/trail-bounds";
 import type { Coordinate, TrailFeature } from "@/types/trail";
 
 const MAP_MIN_ZOOM = 13;
@@ -18,9 +22,9 @@ const getHikerRecenteringOffset = (): [number, number] => {
     return [0, 0];
   }
 
-  const sheetHeight = document.querySelector<HTMLElement>(
-    ".expedition-sidebar",
-  )?.getBoundingClientRect().height;
+  const sheetHeight = document
+    .querySelector<HTMLElement>(".expedition-sidebar")
+    ?.getBoundingClientRect().height;
   return [0, -Math.round((sheetHeight ?? window.innerHeight * 0.46) / 2)];
 };
 
@@ -42,6 +46,7 @@ type MountainMapProps = {
   checkpoints: MapCheckpoint[];
   reachedCheckpointIds: string[];
   hikerAvatarUrl: string | null;
+  navigationBounds?: TrailNavigationBounds;
   onUnavailable: (reason: string) => void;
 };
 
@@ -54,6 +59,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
       checkpoints,
       reachedCheckpointIds,
       hikerAvatarUrl,
+      navigationBounds,
       onUnavailable,
     },
     ref,
@@ -115,14 +121,21 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
             (currentBounds, point) => currentBounds.extend(point as Coordinate),
             new maplibregl.LngLatBounds(start, start),
           );
+          const constrainedBounds =
+            navigationBounds ??
+            getTrailNavigationBounds(
+              feature.geometry.coordinates as Coordinate[],
+            );
           boundsRef.current = bounds;
 
           const map = new maplibregl.Map({
             container: containerRef.current,
             style: mapStyleUrl,
             bounds,
+            maxBounds: constrainedBounds,
             minZoom: MAP_MIN_ZOOM,
             maxZoom: MAP_MAX_ZOOM,
+            renderWorldCopies: false,
             fitBoundsOptions: { padding: 80 },
             attributionControl: false,
           });
@@ -327,7 +340,7 @@ export const MountainMap = forwardRef<MountainMapHandle, MountainMapProps>(
         mapRef.current = null;
         boundsRef.current = null;
       };
-    }, [checkpoints, feature]);
+    }, [checkpoints, feature, navigationBounds]);
 
     useEffect(() => {
       hikerMarkerRef.current?.setLngLat(coordinate);

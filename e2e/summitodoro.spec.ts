@@ -14,6 +14,9 @@ test.beforeEach(async ({ page }) => {
         completedSummits: 0,
         focusChain: 0,
         completedSessionIds: [],
+        trailCoins: 0,
+        lifetimeTrailCoinsEarned: 0,
+        lifetimeTrailCoinsSpent: 0,
       }),
     );
   });
@@ -52,13 +55,10 @@ test("loads directly into the expedition dashboard", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByText("No active expedition")).toBeVisible();
   await expect(
-    page.getByRole("combobox", { name: "Select mountain" }),
-  ).toHaveValue("mt-ulap");
-  await expect(
-    page.getByRole("combobox", { name: "Select mountain" }).locator("option"),
-  ).toHaveCount(3);
+    page.getByRole("button", { name: /Mt\. Pinatubo/ }),
+  ).toBeVisible();
+  await expect(page.getByLabel("0 Trail Coins")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Focus control" }),
   ).toBeVisible();
@@ -83,30 +83,27 @@ test("loads directly into the expedition dashboard", async ({ page }) => {
   expect(mapboxRequests).toEqual([]);
 });
 
-test("switches mountains and explains scaled checkpoint timing", async ({
+test("explains locked mountain requirements while retaining timer controls", async ({
   page,
 }) => {
   await page.goto("/");
-  const mountainSelect = page.getByRole("combobox", {
-    name: "Select mountain",
-  });
-
-  await expect(
-    page.getByText(/Unlocks at 00:10:30 elapsed/).first(),
-  ).toBeVisible();
   await page.getByRole("button", { name: "45 min", exact: true }).click();
   await expect(
-    page.getByText(/Unlocks at 00:15:45 elapsed/).first(),
+    page.getByRole("button", { name: "Deploy hiker" }),
+  ).toBeEnabled();
+
+  await page.getByRole("button", { name: /Mt\. Pinatubo/ }).click();
+  await page
+    .getByRole("option", { name: /Mt\. Ulap, Level 3 required/ })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Unlock Mt. Ulap?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Your level: 1")).toBeVisible();
+  await expect(
+    dialog.getByText(
+      "You need to reach Level 3 before unlocking this mountain.",
+    ),
   ).toBeVisible();
-
-  await mountainSelect.selectOption("mt-pulag");
-  await expect(page).toHaveURL(/\/hike\/mt-pulag$/);
-  await expect(mountainSelect).toHaveValue("mt-pulag");
-  await expect(page.getByText("Mossy Forest").first()).toBeVisible();
-
-  await mountainSelect.selectOption("mt-pinatubo");
-  await expect(page).toHaveURL(/\/hike\/mt-pinatubo$/);
-  await expect(page.getByText("Lahar Canyon").first()).toBeVisible();
 });
 
 test("starts, pauses, and restores a session after refresh", async ({
@@ -140,7 +137,7 @@ test("keeps timer controls available when the map provider fails", async ({
 test("recovers an elapsed session directly at the summit", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      "summitodoro:session:mt-ulap",
+      "summitodoro:session:mt-pinatubo",
       JSON.stringify({
         version: 1,
         session: {
@@ -151,12 +148,12 @@ test("recovers an elapsed session directly at the summit", async ({ page }) => {
           accumulatedPausedMs: 0,
           status: "running",
         },
-        reachedCheckpointIds: ["pine-ridge", "grassland-view"],
+        reachedCheckpointIds: ["lahar-canyon", "crater-rim"],
       }),
     );
   });
 
-  await page.goto("/hike/mt-ulap");
+  await page.goto("/hike/mt-pinatubo");
   const completion = page.getByRole("dialog", { name: "Summit secured!" });
   await expect(completion).toBeVisible();
   await expect(completion.getByText("+100 XP")).toBeVisible();

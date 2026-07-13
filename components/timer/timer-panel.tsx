@@ -9,6 +9,7 @@ type TimerPanelProps = {
   shortBreakRemainingMs: number;
   progress: number;
   hydrated: boolean;
+  locked?: boolean;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -26,6 +27,7 @@ export function TimerPanel({
   shortBreakRemainingMs,
   progress,
   hydrated,
+  locked = false,
   onStart,
   onPause,
   onResume,
@@ -57,7 +59,7 @@ export function TimerPanel({
             key={minutes}
             className={activeMinutes === minutes ? "preset active" : "preset"}
             type="button"
-            disabled={status !== "idle" || !hydrated}
+            disabled={status !== "idle" || !hydrated || locked}
             onClick={() => onDurationChange(minutes * 60_000)}
           >
             {minutes} min
@@ -96,7 +98,7 @@ export function TimerPanel({
           <button
             className="primary-button"
             type="button"
-            disabled={!hydrated}
+            disabled={!hydrated || locked}
             onClick={onStart}
           >
             Deploy hiker
