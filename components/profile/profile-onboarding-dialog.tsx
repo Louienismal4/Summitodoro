@@ -4,13 +4,18 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase/client";
 
 const clearSummitodoroBrowserData = () => {
   [window.localStorage, window.sessionStorage].forEach((storage) => {
-    const keys = Array.from(
-      { length: storage.length },
-      (_, index) => storage.key(index),
+    const keys = Array.from({ length: storage.length }, (_, index) =>
+      storage.key(index),
     );
     keys.forEach((key) => {
       if (key?.startsWith("summitodoro:")) storage.removeItem(key);
@@ -134,12 +139,15 @@ export function ProfileOnboardingDialog({
   };
 
   return (
-    <div className="profile-onboarding-backdrop" role="presentation">
-      <section
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && mode === "edit") onClose?.();
+      }}
+    >
+      <DialogContent
         className="profile-onboarding-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="profile-onboarding-title"
+        overlayClassName="profile-onboarding-backdrop"
       >
         <span className="profile-onboarding-emblem" aria-hidden="true">
           🥾
@@ -147,13 +155,18 @@ export function ProfileOnboardingDialog({
         <p className="section-kicker">
           {mode === "edit" ? "Hiker profile" : "Welcome to Summitodoro"}
         </p>
-        <h2 id="profile-onboarding-title">
+        <DialogTitle id="profile-onboarding-title">
           {mode === "edit"
             ? "Edit hiker profile"
             : user
               ? "Name your hiker"
               : "Continue your expedition"}
-        </h2>
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {mode === "edit"
+            ? "Update your Summitodoro hiker profile."
+            : "Sign in and create your Summitodoro hiker profile."}
+        </DialogDescription>
         {!user && (
           <p>Sign in with Google first, then choose the name for your hiker.</p>
         )}
@@ -222,7 +235,7 @@ export function ProfileOnboardingDialog({
             Close
           </button>
         )}
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

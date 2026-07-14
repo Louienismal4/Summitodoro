@@ -98,7 +98,7 @@ export default function ChangelogPage() {
       <section className="info-hero compact">
         <span className="section-kicker">Product updates</span>
         <h1>Changelog</h1>
-        <p>All notable additions, changes, and fixes from newest to oldest.</p>
+        <p>Follow the trail of improvements to Summitodoro.</p>
       </section>
 
       <section className="release-list" aria-label="Release history">

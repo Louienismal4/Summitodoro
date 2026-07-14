@@ -10,6 +10,53 @@
   --sun: #f2bf52;
   --coral: #d66b4d;
   --line: rgba(24, 63, 53, 0.16);
+
+  /* shadcn/ui semantic tokens, mapped to the existing Summitodoro palette. */
+  --background: var(--cream);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--pine);
+  --primary-foreground: var(--paper);
+  --secondary: #e5ebdf;
+  --secondary-foreground: var(--ink-deep);
+  --muted: #e7eadf;
+  --muted-foreground: #65776f;
+  --accent: var(--sun);
+  --accent-foreground: var(--ink-deep);
+  --destructive: var(--coral);
+  --destructive-foreground: var(--paper);
+  --border: var(--line);
+  --input: rgba(24, 63, 53, 0.24);
+  --ring: var(--sun);
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
 }
 
 * {
@@ -2787,14 +2834,13 @@ body:has(.game-shell) {
   transform: translateY(2px) rotate(225deg);
 }
 .mountain-picker-menu {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% - 4px);
-  right: 16px;
-  left: 16px;
+  z-index: 30;
+  width: var(--radix-dropdown-menu-trigger-width);
+  max-height: min(520px, 70vh);
   padding: 6px;
   display: grid;
   gap: 5px;
+  overflow-y: auto;
   border: 1px solid #d5dbd4;
   border-radius: 7px;
   background: #fff;
