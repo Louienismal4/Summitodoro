@@ -17,6 +17,7 @@ const taskSchema = z.object({
   status: taskStatusSchema,
   totalFocusSeconds: z.number().int().nonnegative(),
   completedSessionCount: z.number().int().nonnegative(),
+  sortOrder: z.number().int().nonnegative().default(0),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   completedAt: z.string().datetime().nullable(),
@@ -75,6 +76,7 @@ export const createTask = (
     status: "active",
     totalFocusSeconds: 0,
     completedSessionCount: 0,
+    sortOrder: 0,
     createdAt: now,
     updatedAt: now,
     completedAt: null,
@@ -109,3 +111,30 @@ export const formatTaskFocusTime = (totalFocusSeconds: number) => {
   const minutes = Math.floor((totalFocusSeconds % 3_600) / 60);
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 };
+
+export const isTaskVisibleInFrontendHistory = (
+  task: Task,
+  now = new Date(),
+) => {
+  if (task.status === "active") return false;
+  const timestamp =
+    task.status === "completed" ? task.completedAt : task.updatedAt;
+  if (!timestamp) return false;
+  const date = new Date(timestamp);
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+};
+
+export const addSoftHyphens = (value: string, interval = 24) =>
+  value
+    .split(/(\s+)/)
+    .map((part) => {
+      if (/\s/.test(part) || part.length <= interval) return part;
+      return (
+        part.match(new RegExp(`.{1,${interval}}`, "g"))?.join("\u00ad") ?? part
+      );
+    })
+    .join("");

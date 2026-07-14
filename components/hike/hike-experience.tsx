@@ -185,6 +185,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         onCreateTask={tasks.create}
         onUpdateTask={tasks.update}
         onDeleteTask={tasks.remove}
+        onReorderTasks={tasks.reorderActiveTasks}
       />
 
       <section className="game-map" aria-label="Virtual expedition map">

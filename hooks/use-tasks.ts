@@ -28,6 +28,7 @@ type DatabaseTask = {
   status: TaskStatus;
   total_focus_seconds: number;
   completed_session_count: number;
+  sort_order: number;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -41,6 +42,7 @@ const toTask = (task: DatabaseTask): Task => ({
   status: task.status,
   totalFocusSeconds: task.total_focus_seconds,
   completedSessionCount: task.completed_session_count,
+  sortOrder: task.sort_order,
   createdAt: task.created_at,
   updatedAt: task.updated_at,
   completedAt: task.completed_at,
@@ -86,12 +88,14 @@ export const useTasks = () => {
       const { data } = await supabase.auth.getUser();
       if (cancelled || !data.user) return;
       setAccountId(data.user.id);
+      await supabase.rpc("purge_expired_task_history");
       const { data: remoteTasks } = await supabase
         .from("tasks")
         .select(
-          "id, user_id, title, description, status, total_focus_seconds, completed_session_count, created_at, updated_at, completed_at",
+          "id, user_id, title, description, status, total_focus_seconds, completed_session_count, sort_order, created_at, updated_at, completed_at",
         )
-        .order("updated_at", { ascending: false });
+        .order("sort_order")
+        .order("created_at");
       if (!cancelled && remoteTasks) {
         setState((current) => ({ ...current, tasks: remoteTasks.map(toTask) }));
       }
@@ -103,7 +107,16 @@ export const useTasks = () => {
 
   const create = useCallback(
     (input: CreateTaskInput) => {
-      const task = createTask(input, accountId);
+      const task = {
+        ...createTask(input, accountId),
+        sortOrder:
+          Math.max(
+            -1,
+            ...state.tasks
+              .filter((current) => current.status === "active")
+              .map((current) => current.sortOrder),
+          ) + 1,
+      };
       setState((current) => ({ ...current, tasks: [task, ...current.tasks] }));
       if (accountId && supabase) {
         void supabase.from("tasks").insert({
@@ -111,11 +124,12 @@ export const useTasks = () => {
           user_id: accountId,
           title: task.title,
           description: task.description,
+          sort_order: task.sortOrder,
         });
       }
       return task;
     },
-    [accountId],
+    [accountId, state.tasks],
   );
 
   const update = useCallback(
@@ -214,6 +228,22 @@ export const useTasks = () => {
     [accountId],
   );
 
+  const reorderActiveTasks = useCallback(
+    (taskIds: readonly string[]) => {
+      setState((current) => ({
+        ...current,
+        tasks: current.tasks.map((task) => {
+          const sortOrder = taskIds.indexOf(task.id);
+          return sortOrder >= 0 ? { ...task, sortOrder } : task;
+        }),
+      }));
+      if (accountId && supabase) {
+        void supabase.rpc("reorder_active_tasks", { p_task_ids: [...taskIds] });
+      }
+    },
+    [accountId],
+  );
+
   return useMemo(
     () => ({
       tasks: state.tasks,
@@ -223,11 +253,13 @@ export const useTasks = () => {
       update,
       remove,
       recordCompletedSession,
+      reorderActiveTasks,
     }),
     [
       create,
       hydrated,
       recordCompletedSession,
+      reorderActiveTasks,
       remove,
       state.sessions,
       state.tasks,

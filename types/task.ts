@@ -8,6 +8,7 @@ export type Task = {
   status: TaskStatus;
   totalFocusSeconds: number;
   completedSessionCount: number;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;

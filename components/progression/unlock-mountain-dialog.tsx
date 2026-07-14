@@ -1,12 +1,19 @@
 "use client";
 
 import { gsap } from "gsap";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import type { MountainUnlockEligibility } from "@/lib/gamification/mountain-unlocks";
 import type { Mountain } from "@/types/mountain";
 
 type UnlockResult = { spent: number; remainingTrailCoins: number };
+
+const confettiPieces = Array.from({ length: 30 }, (_, index) => ({
+  id: index,
+  left: `${8 + ((index * 29) % 84)}%`,
+  delay: `${(index % 8) * 42}ms`,
+  rotation: `${(index * 47) % 180}deg`,
+}));
 
 type UnlockMountainDialogProps = {
   mountain: Mountain;
@@ -84,6 +91,22 @@ export function UnlockMountainDialog({
         aria-modal="true"
         aria-labelledby="unlock-mountain-title"
       >
+        {result && (
+          <div className="unlock-confetti" aria-hidden="true">
+            {confettiPieces.map((piece) => (
+              <span
+                key={piece.id}
+                style={
+                  {
+                    "--confetti-left": piece.left,
+                    "--confetti-delay": piece.delay,
+                    "--confetti-rotation": piece.rotation,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
         <span className="progression-dialog-emblem" aria-hidden="true">
           ◆
         </span>

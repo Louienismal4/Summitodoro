@@ -56,6 +56,7 @@ type ExpeditionSidebarProps = {
   onCreateTask: (input: CreateTaskInput) => Task;
   onUpdateTask: (taskId: string, input: UpdateTaskInput) => void;
   onDeleteTask: (taskId: string) => void;
+  onReorderTasks: (taskIds: readonly string[]) => void;
 };
 
 type YouTubeStreamOption = {
@@ -125,6 +126,7 @@ export function ExpeditionSidebar({
   onCreateTask,
   onUpdateTask,
   onDeleteTask,
+  onReorderTasks,
 }: ExpeditionSidebarProps) {
   const router = useRouter();
   const [isMountainMenuOpen, setIsMountainMenuOpen] = useState(false);
@@ -308,6 +310,7 @@ export function ExpeditionSidebar({
           onCreate={onCreateTask}
           onUpdate={onUpdateTask}
           onDelete={onDeleteTask}
+          onReorder={onReorderTasks}
         />
 
         <TimerPanel

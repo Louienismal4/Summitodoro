@@ -9,7 +9,27 @@ export const metadata: Metadata = {
 
 const releases = [
   {
-    version: "Current · 1.0.0",
+    version: "Current · 1.1.0",
+    date: "July 2026",
+    title: "Task-focused expeditions",
+    categories: {
+      added: [
+        "Task planning with optional descriptions, task selection before an expedition, focus totals, completed-session counts, and contributing-climb history.",
+        "Task history retention: completed and archived tasks remain visible for the current day, with 30-day backend cleanup during authenticated sync.",
+        "Drag handles for prioritizing active tasks, with saved task ordering for signed-in hikers.",
+        "Task view, edit, archive, restore, and delete-confirmation flows using themed shadcn controls.",
+      ],
+      changed: [
+        "Refined the focus-task dashboard with compact history controls, an ellipsis action menu, and resilient long-text handling.",
+        "Successful mountain unlocks now celebrate with a reduced-motion-safe confetti burst.",
+      ],
+      fixed: [
+        "Prevented long task titles, descriptions, and climb labels from stretching the expedition sidebar or task-view dialog.",
+      ],
+    },
+  },
+  {
+    version: "1.0.0",
     date: "July 2026",
     title: "Expedition dashboard refinements",
     categories: {
