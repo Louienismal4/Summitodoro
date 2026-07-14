@@ -21,6 +21,9 @@ export const expeditionProfileSchema = z.object({
   completedSummits: z.number().int().nonnegative(),
   focusChain: z.number().int().nonnegative(),
   completedSessionIds: z.array(z.string()),
+  trailCoins: z.number().int().nonnegative().default(0),
+  lifetimeTrailCoinsEarned: z.number().int().nonnegative().default(0),
+  lifetimeTrailCoinsSpent: z.number().int().nonnegative().default(0),
 });
 
 export const createExpeditionProfile = (): ExpeditionProfile => ({
@@ -33,22 +36,32 @@ export const createExpeditionProfile = (): ExpeditionProfile => ({
   completedSummits: 0,
   focusChain: 0,
   completedSessionIds: [],
+  trailCoins: 0,
+  lifetimeTrailCoinsEarned: 0,
+  lifetimeTrailCoinsSpent: 0,
 });
+
+export const calculateTrailCoinReward = (durationMs: number): number =>
+  Math.max(0, Math.floor(durationMs / 60_000)) * 2;
 
 export const calculateSessionReward = (
   durationMs: number,
   reachedCheckpointCount: number,
   difficulty: MountainDifficulty = "moderate",
 ): SessionReward => {
-  const difficultyMultiplier = { easy: 0.8, moderate: 1, hard: 1.4 }[difficulty];
+  const difficultyMultiplier = { easy: 0.8, moderate: 1, hard: 1.4 }[
+    difficulty
+  ];
   const focusXp = Math.floor(durationMs / 60_000) * 10 * difficultyMultiplier;
-  const checkpointXp = Math.max(0, reachedCheckpointCount) * 25 * difficultyMultiplier;
+  const checkpointXp =
+    Math.max(0, reachedCheckpointCount) * 25 * difficultyMultiplier;
   const summitXp = 50 * difficultyMultiplier;
   return {
     focusXp,
     checkpointXp,
     summitXp,
     totalXp: Math.round(focusXp + checkpointXp + summitXp),
+    trailCoins: calculateTrailCoinReward(durationMs),
   };
 };
 
@@ -76,7 +89,11 @@ export const awardCompletedSession = (
     return { profile, reward: null };
   }
 
-  const reward = calculateSessionReward(durationMs, reachedCheckpointCount, difficulty);
+  const reward = calculateSessionReward(
+    durationMs,
+    reachedCheckpointCount,
+    difficulty,
+  );
   return {
     reward,
     profile: {
@@ -86,6 +103,9 @@ export const awardCompletedSession = (
         profile.totalFocusMinutes + Math.floor(durationMs / 60_000),
       completedSummits: profile.completedSummits + 1,
       focusChain: profile.focusChain + 1,
+      trailCoins: profile.trailCoins + reward.trailCoins,
+      lifetimeTrailCoinsEarned:
+        profile.lifetimeTrailCoinsEarned + reward.trailCoins,
       completedSessionIds: [
         ...profile.completedSessionIds.slice(-99),
         sessionId,

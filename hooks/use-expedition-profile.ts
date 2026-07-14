@@ -10,12 +10,15 @@ import {
   parseExpeditionProfile,
   sanitizeProfileIdentity,
 } from "@/lib/gamification/progression";
+import { claimCompletedFocusSessionReward } from "@/lib/gamification/session-rewards";
 import { supabase } from "@/lib/supabase/client";
 import type { FocusSession } from "@/types/session";
 import type { ExpeditionProfile } from "@/types/gamification";
 import type { MountainDifficulty } from "@/types/mountain";
 
 const STORAGE_KEY = "summitodoro:expedition-profile";
+const PROFILE_COLUMNS =
+  "display_name, avatar_url, xp, total_focus_minutes, completed_summits, focus_chain, completed_session_ids, trail_coins, lifetime_trail_coins_earned, lifetime_trail_coins_spent";
 
 type StoredHikerProfile = {
   display_name: string;
@@ -25,6 +28,9 @@ type StoredHikerProfile = {
   completed_summits: number;
   focus_chain: number;
   completed_session_ids: unknown;
+  trail_coins: number;
+  lifetime_trail_coins_earned: number;
+  lifetime_trail_coins_spent: number;
 };
 
 const toExpeditionProfile = (profile: StoredHikerProfile): ExpeditionProfile =>
@@ -39,6 +45,9 @@ const toExpeditionProfile = (profile: StoredHikerProfile): ExpeditionProfile =>
       completedSummits: profile.completed_summits,
       focusChain: profile.focus_chain,
       completedSessionIds: profile.completed_session_ids,
+      trailCoins: profile.trail_coins,
+      lifetimeTrailCoinsEarned: profile.lifetime_trail_coins_earned,
+      lifetimeTrailCoinsSpent: profile.lifetime_trail_coins_spent,
     }),
   ) ?? createExpeditionProfile();
 
@@ -51,6 +60,15 @@ export const useExpeditionProfile = (
   const [hydrated, setHydrated] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [cloudReady, setCloudReady] = useState(false);
+  const projectedReward = useMemo(
+    () =>
+      calculateSessionReward(
+        session.durationMs,
+        reachedCheckpointCount,
+        difficulty,
+      ),
+    [difficulty, reachedCheckpointCount, session.durationMs],
+  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -77,9 +95,7 @@ export const useExpeditionProfile = (
 
       const { data: savedProfile } = await supabase
         .from("hiker_profiles")
-        .select(
-          "display_name, avatar_url, xp, total_focus_minutes, completed_summits, focus_chain, completed_session_ids",
-        )
+        .select(PROFILE_COLUMNS)
         .eq("id", data.user.id)
         .maybeSingle();
 
@@ -102,11 +118,6 @@ export const useExpeditionProfile = (
         id: accountId,
         display_name: profile.displayName,
         avatar_url: profile.avatarUrl,
-        xp: profile.xp,
-        total_focus_minutes: profile.totalFocusMinutes,
-        completed_summits: profile.completedSummits,
-        focus_chain: profile.focusChain,
-        completed_session_ids: profile.completedSessionIds,
       },
       { onConflict: "id" },
     );
@@ -135,16 +146,58 @@ export const useExpeditionProfile = (
     };
   }, [difficulty, hydrated, reachedCheckpointCount, session]);
 
-  const projectedReward = useMemo(
-    () => calculateSessionReward(session.durationMs, reachedCheckpointCount, difficulty),
-    [difficulty, reachedCheckpointCount, session.durationMs],
-  );
+  useEffect(() => {
+    if (
+      !cloudReady ||
+      !accountId ||
+      !supabase ||
+      session.status !== "completed"
+    )
+      return;
+    const client = supabase;
+    let cancelled = false;
+
+    void claimCompletedFocusSessionReward(client, {
+      sessionId: session.id,
+      durationMs: session.durationMs,
+      reachedCheckpointCount,
+      difficulty,
+    })
+      .then(async () => {
+        const { data: savedProfile } = await client
+          .from("hiker_profiles")
+          .select(PROFILE_COLUMNS)
+          .eq("id", accountId)
+          .single();
+        if (cancelled || !savedProfile) return;
+        setProfile(toExpeditionProfile(savedProfile));
+      })
+      .catch(() => {
+        // The local profile preserves the existing offline completion behavior.
+        // Retrying the same session is safe because the database function is idempotent.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, cloudReady, difficulty, reachedCheckpointCount, session]);
 
   const updateIdentity = useCallback(
     (displayName: string, avatarUrl: string | null) => {
       setProfile((current) => ({
         ...current,
         ...sanitizeProfileIdentity(displayName, avatarUrl),
+      }));
+    },
+    [],
+  );
+
+  const applyMountainUnlock = useCallback(
+    (spent: number, remainingTrailCoins: number) => {
+      setProfile((current) => ({
+        ...current,
+        trailCoins: remainingTrailCoins,
+        lifetimeTrailCoinsSpent: current.lifetimeTrailCoinsSpent + spent,
       }));
     },
     [],
@@ -158,7 +211,15 @@ export const useExpeditionProfile = (
       lastReward: session.status === "completed" ? projectedReward : null,
       projectedReward,
       updateIdentity,
+      applyMountainUnlock,
     }),
-    [hydrated, profile, projectedReward, session.status, updateIdentity],
+    [
+      applyMountainUnlock,
+      hydrated,
+      profile,
+      projectedReward,
+      session.status,
+      updateIdentity,
+    ],
   );
 };

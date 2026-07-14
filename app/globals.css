@@ -10,6 +10,53 @@
   --sun: #f2bf52;
   --coral: #d66b4d;
   --line: rgba(24, 63, 53, 0.16);
+
+  /* shadcn/ui semantic tokens, mapped to the existing Summitodoro palette. */
+  --background: var(--cream);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--pine);
+  --primary-foreground: var(--paper);
+  --secondary: #e5ebdf;
+  --secondary-foreground: var(--ink-deep);
+  --muted: #e7eadf;
+  --muted-foreground: #65776f;
+  --accent: var(--sun);
+  --accent-foreground: var(--ink-deep);
+  --destructive: var(--coral);
+  --destructive-foreground: var(--paper);
+  --border: var(--line);
+  --input: rgba(24, 63, 53, 0.24);
+  --ring: var(--sun);
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
 }
 
 * {
@@ -1547,7 +1594,7 @@ a {
   color: #626a63;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 8px;
+  font-size: 9px;
 }
 .hud-card-heading > span {
   color: #0aa256;
@@ -1601,7 +1648,7 @@ a {
   color: #858b86;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 7px;
+  font-size: 8px;
 }
 .summary-grid strong {
   font-family: "Courier New", monospace;
@@ -1615,11 +1662,11 @@ a {
   color: #798079;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 8px;
+  font-size: 9px;
 }
 .mission-reward-row strong {
   color: #07964c;
-  font-size: 12px;
+  font-size: 13px;
 }
 .level-row {
   margin: 14px 0 11px;
@@ -1776,18 +1823,30 @@ a {
   display: grid;
   gap: 2px;
 }
+.profile-name-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+.profile-name-row > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .hiker-profile small {
   color: #8c928c;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 7px;
+  font-size: 8px;
 }
 .hiker-profile strong {
-  font-size: 12px;
+  font-size: 13px;
 }
 .hiker-profile span {
   color: #737a74;
-  font-size: 8px;
+  font-size: 9px;
 }
 .profile-xp-progress {
   grid-column: 1 / -1;
@@ -1802,7 +1861,7 @@ a {
 .profile-xp-progress small,
 .profile-xp-progress span {
   color: #737a74;
-  font-size: 7px;
+  font-size: 8px;
 }
 .profile-xp-progress .segmented-progress {
   gap: 3px;
@@ -1815,7 +1874,7 @@ a {
   border-radius: 4px;
   color: #717871;
   background: #e6e8e4;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 800;
 }
 .profile-status.active {
@@ -2105,8 +2164,8 @@ a {
   z-index: 5;
   left: 18px;
   bottom: 18px;
-  width: min(520px, calc(100% - 280px));
-  padding: 13px 15px;
+  width: min(560px, calc(100% - 280px));
+  padding: 15px 17px;
 }
 .checkpoint-dock-heading {
   display: flex;
@@ -2114,7 +2173,7 @@ a {
   color: #777e78;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 7px;
+  font-size: 9px;
 }
 .checkpoint-dock-heading span {
   color: #07964d;
@@ -2126,7 +2185,7 @@ a {
   color: #777e78;
   text-transform: none;
   letter-spacing: normal;
-  font-size: 7px;
+  font-size: 8px;
   line-height: 1.35;
 }
 .checkpoint-route {
@@ -2138,7 +2197,7 @@ a {
 .checkpoint-route::before {
   content: "";
   position: absolute;
-  top: 13px;
+  top: 15px;
   left: 10%;
   right: 10%;
   height: 2px;
@@ -2149,7 +2208,7 @@ a {
   z-index: 1;
   display: grid;
   justify-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -2157,22 +2216,22 @@ a {
   cursor: help;
 }
 .checkpoint-node > span:not(.checkpoint-tooltip) {
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   display: grid;
   place-items: center;
   border: 2px solid white;
   border-radius: 50%;
   background: #cfd4cf;
   box-shadow: 0 0 0 1px #d3d7d2;
-  font-size: 7px;
+  font-size: 8px;
 }
 .checkpoint-node small {
   max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 7px;
+  font-size: 9px;
 }
 .checkpoint-node:focus-visible {
   outline: 2px solid #f3a522;
@@ -2191,7 +2250,7 @@ a {
   background: #1c2520;
   box-shadow: 0 4px 12px rgba(13, 45, 38, 0.22);
   color: #fff !important;
-  font-size: 7px !important;
+  font-size: 8px !important;
   line-height: 1.35;
   opacity: 0;
   pointer-events: none;
@@ -2385,7 +2444,7 @@ a {
   }
   .checkpoint-node small {
     max-width: 68px;
-    font-size: 6px;
+    font-size: 8px;
   }
   .summary-grid {
     gap: 7px;
@@ -2466,6 +2525,9 @@ body:has(.game-shell) {
   margin-top: 12px;
   border-radius: 6px;
 }
+.mountain-picker-trigger.is-open {
+  z-index: 21;
+}
 .mountain-picker-card-wrap {
   position: relative;
   display: block;
@@ -2489,6 +2551,7 @@ body:has(.game-shell) {
   min-width: 0;
   padding: 8px;
   display: grid;
+  position: relative;
   grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
@@ -2501,6 +2564,36 @@ body:has(.game-shell) {
 .mountain-picker-option.selected .mountain-option-card {
   border-color: #79b58e;
   background: #f1f7f2;
+}
+.mountain-picker-option:has(.mountain-option-card.locked) {
+  position: relative;
+}
+.mountain-option-card.locked {
+  border-color: #d7d8d4;
+  background: #f0f1ee;
+}
+.mountain-option-card.locked .mountain-option-image,
+.mountain-option-card.locked .mountain-option-copy,
+.mountain-option-card.locked > b {
+  filter: grayscale(0.75);
+  opacity: 0.72;
+}
+.mountain-option-card.locked .mountain-option-copy i {
+  color: #7c5f22;
+}
+.mountain-lock-badge {
+  position: absolute;
+  top: 7px;
+  left: 40px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d1c8b8;
+  border-radius: 50%;
+  background: #fffdf7;
+  font-size: 9px;
+  box-shadow: 0 2px 5px rgba(24, 63, 53, 0.14);
 }
 .mountain-option-image {
   width: 52px;
@@ -2527,23 +2620,167 @@ body:has(.game-shell) {
 .mountain-option-copy strong {
   overflow: hidden;
   color: #232924;
-  font-size: 10px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .mountain-option-copy small {
   overflow: hidden;
   color: #858c86;
-  font-size: 7px;
+  font-size: 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .mountain-option-copy em {
   color: #078f49;
-  font-size: 7px;
+  font-size: 8px;
   font-style: normal;
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+.mountain-option-copy i {
+  color: #737b75;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+}
+.trail-coin-balance {
+  margin-top: 12px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #ead29a;
+  border-radius: 5px;
+  background: #fff9e9;
+}
+.trail-coin-balance > span,
+.progression-dialog-emblem {
+  color: #b77d12;
+}
+.trail-coin-balance > span {
+  font-size: 16px;
+}
+.trail-coin-balance div {
+  display: grid;
+  gap: 2px;
+}
+.trail-coin-balance small {
+  color: #77683f;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.trail-coin-balance strong {
+  color: #5e4816;
+  font-family: "Courier New", monospace;
+  font-size: 15px;
+}
+.profile-trail-coin-balance {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+}
+.profile-trail-coin-balance > span {
+  font-size: 10px;
+}
+.profile-trail-coin-balance strong {
+  color: #776018;
+  font-size: 11px;
+}
+.locked-mountain-overlay {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  padding: 24px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  color: var(--paper);
+  background: rgba(13, 45, 38, 0.82);
+  text-align: center;
+}
+.locked-mountain-overlay > span {
+  color: var(--sun);
+  font-size: 28px;
+}
+.locked-mountain-overlay strong {
+  margin-top: 10px;
+  font:
+    700 28px Georgia,
+    serif;
+}
+.locked-mountain-overlay p {
+  max-width: 340px;
+  margin: 10px 0 18px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.5;
+}
+.progression-dialog-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  background: rgba(13, 45, 38, 0.83);
+  backdrop-filter: blur(7px);
+}
+.progression-dialog {
+  width: min(470px, 100%);
+  padding: clamp(30px, 5vw, 48px);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+.progression-dialog-emblem {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 28px;
+}
+.progression-dialog h2 {
+  margin: 8px 0 16px;
+  font:
+    700 clamp(30px, 5vw, 42px)/1 Georgia,
+    serif;
+  letter-spacing: -0.04em;
+}
+.progression-dialog > p {
+  color: #65776f;
+  line-height: 1.55;
+}
+.unlock-requirements {
+  margin: 20px 0;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+.unlock-requirements span {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #dfe3de;
+  border-radius: 5px;
+  color: #65776f;
+  font-size: 12px;
+}
+.unlock-requirements b {
+  color: var(--ink);
+}
+.progression-dialog-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.progression-error {
+  color: #a33d34 !important;
 }
 .mountain-option-card > b {
   min-width: 64px;
@@ -2553,7 +2790,7 @@ body:has(.game-shell) {
   color: #087e43;
   background: #def2e5;
   text-transform: uppercase;
-  font-size: 6px;
+  font-size: 7px;
   letter-spacing: 0.08em;
   text-align: center;
 }
@@ -2577,6 +2814,7 @@ body:has(.game-shell) {
   height: 22px;
   display: grid;
   place-items: center;
+  z-index: 2;
   border-radius: 50%;
   background: #e8f4eb;
   pointer-events: none;
@@ -2596,14 +2834,13 @@ body:has(.game-shell) {
   transform: translateY(2px) rotate(225deg);
 }
 .mountain-picker-menu {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% - 4px);
-  right: 16px;
-  left: 16px;
+  z-index: 30;
+  width: var(--radix-dropdown-menu-trigger-width);
+  max-height: min(520px, 70vh);
   padding: 6px;
   display: grid;
   gap: 5px;
+  overflow-y: auto;
   border: 1px solid #d5dbd4;
   border-radius: 7px;
   background: #fff;
