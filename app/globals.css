@@ -3201,6 +3201,246 @@ body:has(.game-shell) {
   line-height: 1.4;
 }
 
+.task-panel {
+  display: grid;
+  gap: 10px;
+}
+.task-intro,
+.task-empty,
+.timer-task-note,
+.completion-task-note {
+  margin: 0;
+  color: #777e78;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.task-selection-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+.task-current,
+.task-new-button,
+.task-cancel,
+.task-actions button,
+.task-history > button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+.task-current {
+  min-width: 0;
+  padding: 9px 10px;
+  overflow: hidden;
+  border: 1px dashed #cfd5ce;
+  border-radius: 4px;
+  color: #737a74;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.task-current.selected {
+  border-color: #89cba5;
+  color: #076f3a;
+  background: #edf8f0;
+  font-weight: 700;
+}
+.task-current:disabled,
+.task-select-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.task-new-button {
+  padding: 8px 10px;
+  border: 1px solid #101311;
+  border-radius: 4px;
+  color: #fff;
+  background: #101311;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 8px;
+  font-weight: 800;
+}
+.task-form {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #e0e4de;
+  border-radius: 5px;
+  background: #f8faf6;
+}
+.task-form label {
+  display: grid;
+  gap: 4px;
+  color: #626a63;
+  font-size: 9px;
+  font-weight: 700;
+}
+.task-form label small {
+  color: #919891;
+  font-weight: 400;
+}
+.task-form input,
+.task-form textarea {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid #d9ded7;
+  border-radius: 3px;
+  color: #303631;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+  resize: vertical;
+}
+.task-form input:focus,
+.task-form textarea:focus {
+  border-color: #0ba256;
+  outline: 2px solid rgba(11, 162, 86, 0.13);
+}
+.task-form > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.task-form .primary-button {
+  min-height: 31px;
+  padding: 7px 9px;
+  font-size: 8px;
+}
+.task-cancel,
+.task-history > button {
+  color: #707870;
+  font-size: 9px;
+}
+.task-list {
+  display: grid;
+  gap: 6px;
+}
+.task-card {
+  padding: 9px;
+  border: 1px solid #e0e4de;
+  border-radius: 5px;
+  background: #fff;
+}
+.task-card.selected {
+  border-color: #83c8a1;
+  box-shadow: inset 3px 0 #0ca458;
+}
+.task-card-main {
+  display: flex;
+  gap: 5px;
+  align-items: start;
+  justify-content: space-between;
+}
+.task-select-button {
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 7px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.task-selection-mark {
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #bfc7bf;
+  border-radius: 50%;
+  color: #fff;
+  background: #fff;
+  font-size: 9px;
+}
+.task-card.selected .task-selection-mark {
+  border-color: #0ca458;
+  background: #0ca458;
+}
+.task-select-button strong,
+.task-select-button small {
+  display: block;
+}
+.task-select-button strong {
+  overflow: hidden;
+  color: #3e463f;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.task-select-button small {
+  margin-top: 3px;
+  color: #858c85;
+  font-size: 8px;
+  line-height: 1.3;
+}
+.task-status {
+  padding: 3px 5px;
+  border-radius: 99px;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.task-status-active {
+  color: #06733b;
+  background: #e6f6eb;
+}
+.task-status-completed {
+  color: #59635b;
+  background: #edf0ec;
+}
+.task-status-archived {
+  color: #806d4c;
+  background: #f6f0e5;
+}
+.task-metrics,
+.task-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 8px;
+  color: #858c85;
+  font-size: 8px;
+}
+.task-climbs {
+  margin: 7px 0 0;
+  color: #6e766f;
+  font-size: 8px;
+  line-height: 1.35;
+}
+.task-actions {
+  margin-top: 7px;
+}
+.task-actions button {
+  padding: 0;
+  color: #0b8750;
+  font-size: 8px;
+}
+.task-actions button:last-child {
+  color: #af5d4b;
+}
+.task-history {
+  padding-top: 2px;
+}
+.task-history > button:hover,
+.task-actions button:hover,
+.task-cancel:hover {
+  text-decoration: underline;
+}
+.timer-task-note {
+  margin-top: 10px;
+  text-align: center;
+}
+.timer-task-note.selected,
+.completion-task-note {
+  color: #08753e;
+}
+
 @media (max-width: 1180px) and (min-width: 821px) {
   .game-shell {
     grid-template-columns: 360px 1fr;

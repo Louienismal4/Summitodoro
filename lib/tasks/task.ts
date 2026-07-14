@@ -1,0 +1,111 @@
+import { z } from "zod";
+
+import type {
+  CreateTaskInput,
+  Task,
+  TaskStatus,
+  UpdateTaskInput,
+} from "@/types/task";
+
+const taskStatusSchema = z.enum(["active", "completed", "archived"]);
+
+const taskSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid().nullable(),
+  title: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(1_000).nullable(),
+  status: taskStatusSchema,
+  totalFocusSeconds: z.number().int().nonnegative(),
+  completedSessionCount: z.number().int().nonnegative(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable(),
+});
+
+const storedTasksSchema = z.object({
+  version: z.literal(1),
+  tasks: z.array(taskSchema),
+  completedSessionIds: z.array(z.string().uuid()),
+  sessions: z
+    .array(
+      z.object({
+        sessionId: z.string().uuid(),
+        taskId: z.string().uuid(),
+        mountainId: z.string(),
+        mountainName: z.string(),
+        durationSeconds: z.number().int().positive(),
+        completedAt: z.string().datetime(),
+      }),
+    )
+    .default([]),
+});
+
+export type StoredTasks = z.infer<typeof storedTasksSchema>;
+
+export const parseStoredTasks = (value: string): StoredTasks | null => {
+  try {
+    return storedTasksSchema.parse(JSON.parse(value));
+  } catch {
+    return null;
+  }
+};
+
+export const sanitizeTaskInput = (input: CreateTaskInput): CreateTaskInput => ({
+  title: input.title.trim().slice(0, 120),
+  description: input.description?.trim().slice(0, 1_000) || undefined,
+});
+
+export const isTaskStatus = (value: string): value is TaskStatus =>
+  taskStatusSchema.safeParse(value).success;
+
+export const createTask = (
+  input: CreateTaskInput,
+  userId: string | null,
+  id = crypto.randomUUID(),
+  now = new Date().toISOString(),
+): Task => {
+  const task = sanitizeTaskInput(input);
+  if (!task.title) throw new Error("A task title is required.");
+
+  return {
+    id,
+    userId,
+    title: task.title,
+    description: task.description ?? null,
+    status: "active",
+    totalFocusSeconds: 0,
+    completedSessionCount: 0,
+    createdAt: now,
+    updatedAt: now,
+    completedAt: null,
+  };
+};
+
+export const updateTask = (
+  task: Task,
+  input: UpdateTaskInput,
+  now = new Date().toISOString(),
+): Task => {
+  const title =
+    input.title === undefined ? task.title : input.title.trim().slice(0, 120);
+  if (!title) throw new Error("A task title is required.");
+  const status = input.status ?? task.status;
+
+  return {
+    ...task,
+    title,
+    description:
+      input.description === undefined
+        ? task.description
+        : input.description.trim().slice(0, 1_000) || null,
+    status,
+    updatedAt: now,
+    completedAt: status === "completed" ? (task.completedAt ?? now) : null,
+  };
+};
+
+export const formatTaskFocusTime = (totalFocusSeconds: number) => {
+  const hours = Math.floor(totalFocusSeconds / 3_600);
+  const minutes = Math.floor((totalFocusSeconds % 3_600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+};

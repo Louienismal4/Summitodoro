@@ -15,6 +15,7 @@ type TimerPanelProps = {
   onResume: () => void;
   onReset: () => void;
   onDurationChange: (durationMs: number) => void;
+  taskLabel?: string | null;
 };
 
 const presets = [30, 45, 60, 90, 120];
@@ -33,6 +34,7 @@ export function TimerPanel({
   onResume,
   onReset,
   onDurationChange,
+  taskLabel = null,
 }: TimerPanelProps) {
   const activeMinutes = durationMs / 60_000;
   const timerLabel = isOnBreak
@@ -128,6 +130,12 @@ export function TimerPanel({
           Reset
         </button>
       </div>
+
+      <p className={taskLabel ? "timer-task-note selected" : "timer-task-note"}>
+        {taskLabel
+          ? `Tracking: ${taskLabel}`
+          : "No task selected — this expedition can still be logged."}
+      </p>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {isOnBreak

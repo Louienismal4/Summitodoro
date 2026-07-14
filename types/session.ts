@@ -2,6 +2,7 @@ export type SessionStatus = "idle" | "running" | "paused" | "completed";
 
 export type FocusSession = {
   id: string;
+  taskId: string | null;
   durationMs: number;
   startedAt: number | null;
   pausedAt: number | null;
@@ -10,7 +11,7 @@ export type FocusSession = {
 };
 
 export type PersistedFocusSession = {
-  version: 1;
+  version: 2;
   session: FocusSession;
   reachedCheckpointIds: string[];
   breakUntil?: number | null;

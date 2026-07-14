@@ -9,6 +9,7 @@ import {
   parsePersistedSession,
   pauseSession,
   resumeSession,
+  setSessionTask,
   startSession,
 } from "@/lib/timer/focus-session";
 
@@ -45,5 +46,23 @@ describe("focus session timer", () => {
   it("rejects malformed local storage values", () => {
     expect(parsePersistedSession("not-json")).toBeNull();
     expect(parsePersistedSession('{"version":2}')).toBeNull();
+  });
+
+  it("preserves a selected task through storage recovery and locks it on start", () => {
+    const session = setSessionTask(
+      createFocusSession(60_000, "session-1"),
+      "018f9b8a-0000-4000-8000-000000000001",
+    );
+    const persisted = parsePersistedSession(
+      JSON.stringify({
+        version: 2,
+        session,
+        reachedCheckpointIds: [],
+      }),
+    );
+    expect(persisted?.session.taskId).toBe(session.taskId);
+    expect(setSessionTask(startSession(session, 1_000), null).taskId).toBe(
+      session.taskId,
+    );
   });
 });

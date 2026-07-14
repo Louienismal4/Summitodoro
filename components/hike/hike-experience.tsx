@@ -15,6 +15,7 @@ import { mountains } from "@/data/mountains";
 import { useExpeditionProfile } from "@/hooks/use-expedition-profile";
 import { useFocusSession } from "@/hooks/use-focus-session";
 import { useMountainUnlocks } from "@/hooks/use-mountain-unlocks";
+import { useTasks } from "@/hooks/use-tasks";
 import { supabase } from "@/lib/supabase/client";
 import { formatRemainingTime } from "@/lib/timer/format-time";
 import { getTimedMilestones } from "@/lib/timer/milestones";
@@ -52,6 +53,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
     initialDurationMs: mountain.defaultDurationMinutes * 60_000,
     checkpoints: mountain.checkpoints,
   });
+  const tasks = useTasks();
   const game = useExpeditionProfile(
     focus.session,
     focus.reachedCheckpointIds.length,
@@ -62,6 +64,17 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
     game.level,
     game.profile.trailCoins,
   );
+
+  useEffect(() => {
+    if (focus.session.status !== "completed" || !focus.session.taskId) return;
+    tasks.recordCompletedSession({
+      sessionId: focus.session.id,
+      taskId: focus.session.taskId,
+      durationSeconds: Math.floor(focus.session.durationMs / 1_000),
+      mountainId: mountain.id,
+      mountainName: mountain.name,
+    });
+  }, [focus.session, mountain.id, mountain.name, tasks]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -165,6 +178,13 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         onDurationChange={focus.setDuration}
         onEditProfile={() => setShowProfileEditor(true)}
         onRequestUnlock={requestUnlock}
+        tasks={tasks.tasks}
+        taskSessions={tasks.sessions}
+        selectedTaskId={focus.session.taskId}
+        onSelectTask={focus.setTask}
+        onCreateTask={tasks.create}
+        onUpdateTask={tasks.update}
+        onDeleteTask={tasks.remove}
       />
 
       <section className="game-map" aria-label="Virtual expedition map">
@@ -404,6 +424,14 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
               Your focused ascent of {mountain.name} is complete. Rewards have
               been added to your local hiker profile.
             </p>
+            {focus.session.taskId && (
+              <p className="completion-task-note">
+                Focus time added to{" "}
+                {tasks.tasks.find((task) => task.id === focus.session.taskId)
+                  ?.title ?? "your selected task"}
+                .
+              </p>
+            )}
             <div className="reward-breakdown">
               <div>
                 <small>Focus XP</small>

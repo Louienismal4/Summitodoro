@@ -4,6 +4,7 @@ import type { FocusSession, PersistedFocusSession } from "@/types/session";
 
 const sessionSchema = z.object({
   id: z.string().min(1),
+  taskId: z.string().uuid().nullable().optional(),
   durationMs: z.number().int().positive(),
   startedAt: z.number().nonnegative().nullable(),
   pausedAt: z.number().nonnegative().nullable(),
@@ -11,8 +12,8 @@ const sessionSchema = z.object({
   status: z.enum(["idle", "running", "paused", "completed"]),
 });
 
-export const persistedFocusSessionSchema = z.object({
-  version: z.literal(1),
+const persistedFocusSessionSchema = z.object({
+  version: z.union([z.literal(1), z.literal(2)]),
   session: sessionSchema,
   reachedCheckpointIds: z.array(z.string()),
   breakUntil: z.number().nonnegative().nullable().optional(),
@@ -24,8 +25,10 @@ const clamp = (value: number, minimum: number, maximum: number) =>
 export const createFocusSession = (
   durationMs: number,
   id = crypto.randomUUID(),
+  taskId: string | null = null,
 ): FocusSession => ({
   id,
+  taskId,
   durationMs,
   startedAt: null,
   pausedAt: null,
@@ -101,8 +104,19 @@ export const parsePersistedSession = (
   value: string,
 ): PersistedFocusSession | null => {
   try {
-    return persistedFocusSessionSchema.parse(JSON.parse(value));
+    const parsed = persistedFocusSessionSchema.parse(JSON.parse(value));
+    return {
+      ...parsed,
+      version: 2,
+      session: { ...parsed.session, taskId: parsed.session.taskId ?? null },
+    };
   } catch {
     return null;
   }
 };
+
+export const setSessionTask = (
+  session: FocusSession,
+  taskId: string | null,
+): FocusSession =>
+  session.status === "idle" ? { ...session, taskId } : session;

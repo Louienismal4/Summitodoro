@@ -7,10 +7,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppTour } from "@/components/onboarding/app-tour";
+import { TaskPanel } from "@/components/tasks/task-panel";
 import { TimerPanel } from "@/components/timer/timer-panel";
 import type { MountainUnlockEligibility } from "@/lib/gamification/mountain-unlocks";
 import type { LevelProgress, ExpeditionProfile } from "@/types/gamification";
 import type { SessionStatus } from "@/types/session";
+import type { CreateTaskInput, Task, UpdateTaskInput } from "@/types/task";
 
 type MountainOption = {
   slug: string;
@@ -47,6 +49,13 @@ type ExpeditionSidebarProps = {
   onDurationChange: (durationMs: number) => void;
   onEditProfile: () => void;
   onRequestUnlock: (mountain: MountainOption) => void;
+  tasks: readonly Task[];
+  taskSessions: readonly import("@/types/task").TaskFocusSession[];
+  selectedTaskId: string | null;
+  onSelectTask: (taskId: string | null) => void;
+  onCreateTask: (input: CreateTaskInput) => Task;
+  onUpdateTask: (taskId: string, input: UpdateTaskInput) => void;
+  onDeleteTask: (taskId: string) => void;
 };
 
 type YouTubeStreamOption = {
@@ -109,6 +118,13 @@ export function ExpeditionSidebar({
   onDurationChange,
   onEditProfile,
   onRequestUnlock,
+  tasks,
+  taskSessions,
+  selectedTaskId,
+  onSelectTask,
+  onCreateTask,
+  onUpdateTask,
+  onDeleteTask,
 }: ExpeditionSidebarProps) {
   const router = useRouter();
   const [isMountainMenuOpen, setIsMountainMenuOpen] = useState(false);
@@ -283,6 +299,17 @@ export function ExpeditionSidebar({
           </div>
         </section>
 
+        <TaskPanel
+          tasks={tasks}
+          sessions={taskSessions}
+          selectedTaskId={selectedTaskId}
+          selectionLocked={status !== "idle"}
+          onSelect={onSelectTask}
+          onCreate={onCreateTask}
+          onUpdate={onUpdateTask}
+          onDelete={onDeleteTask}
+        />
+
         <TimerPanel
           status={status}
           durationMs={durationMs}
@@ -297,6 +324,9 @@ export function ExpeditionSidebar({
           onResume={onResume}
           onReset={onReset}
           onDurationChange={onDurationChange}
+          taskLabel={
+            tasks.find((task) => task.id === selectedTaskId)?.title ?? null
+          }
         />
 
         <section className="hud-card music-panel" data-tour="music-player">
