@@ -2,35 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-<<<<<<< HEAD
 import { gsap } from "gsap";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-=======
-<<<<<<< HEAD
-import { useState } from "react";
-=======
-import { gsap } from "gsap";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
->>>>>>> 9816b8fe510978f7d583f633c7e69aa008eff9d9
->>>>>>> 962f03cf1e9ece12caf040d4c23420dd223cb6a5
 import { useRouter } from "next/navigation";
 
 import { AppTour } from "@/components/onboarding/app-tour";
 import { TimerPanel } from "@/components/timer/timer-panel";
-<<<<<<< HEAD
 import type { MountainUnlockEligibility } from "@/lib/gamification/mountain-unlocks";
-=======
-<<<<<<< HEAD
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-=======
-import type { MountainUnlockEligibility } from "@/lib/gamification/mountain-unlocks";
->>>>>>> 9816b8fe510978f7d583f633c7e69aa008eff9d9
->>>>>>> 962f03cf1e9ece12caf040d4c23420dd223cb6a5
 import type { LevelProgress, ExpeditionProfile } from "@/types/gamification";
 import type { SessionStatus } from "@/types/session";
 
@@ -134,14 +112,8 @@ export function ExpeditionSidebar({
 }: ExpeditionSidebarProps) {
   const router = useRouter();
   const [isMountainMenuOpen, setIsMountainMenuOpen] = useState(false);
-<<<<<<< HEAD
-=======
   const mountainSelectorRef = useRef<HTMLElement>(null);
   const mountainMenuRef = useRef<HTMLDivElement>(null);
-<<<<<<< HEAD
-=======
->>>>>>> 9816b8fe510978f7d583f633c7e69aa008eff9d9
->>>>>>> 962f03cf1e9ece12caf040d4c23420dd223cb6a5
   const youtubeStreamOptions = defaultYouTubeStreamOptions;
   const [selectedStreamIndex, setSelectedStreamIndex] = useState(0);
   const streamOption = youtubeStreamOptions[selectedStreamIndex];
@@ -152,8 +124,6 @@ export function ExpeditionSidebar({
   const selectedMountain = mountainOptions.find(
     (mountain) => mountain.slug === mountainSlug,
   );
-<<<<<<< HEAD
-=======
   useEffect(() => {
     if (!isMountainMenuOpen) return;
     const closeOnOutsidePointer = (event: PointerEvent) => {
@@ -186,10 +156,6 @@ export function ExpeditionSidebar({
     }, mountainSelectorRef);
     return () => context.revert();
   }, [isMountainMenuOpen]);
-<<<<<<< HEAD
-=======
->>>>>>> 9816b8fe510978f7d583f633c7e69aa008eff9d9
->>>>>>> 962f03cf1e9ece12caf040d4c23420dd223cb6a5
   return (
     <aside className="expedition-sidebar" aria-label="Expedition dashboard">
       <div className="bottom-sheet-handle" aria-hidden="true" />
@@ -212,6 +178,7 @@ export function ExpeditionSidebar({
         </header>
 
         <section
+          ref={mountainSelectorRef}
           className="hud-card mountain-selector-card"
           data-tour="mountain-selector"
         >
@@ -221,60 +188,6 @@ export function ExpeditionSidebar({
             <small>{mountainOptions.length} available</small>
           </div>
           {selectedMountain && (
-<<<<<<< HEAD
-            <DropdownMenu
-              open={isMountainMenuOpen}
-              onOpenChange={setIsMountainMenuOpen}
-            >
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className={
-                    isMountainMenuOpen
-                      ? "mountain-picker-trigger is-open"
-                      : "mountain-picker-trigger"
-                  }
-                  disabled={active}
-                >
-                  <span className="mountain-picker-card-wrap">
-                    <MountainOptionCard mountain={selectedMountain} />
-                    <span
-                      className={[
-                        "mountain-picker-chevron",
-                        isMountainMenuOpen && "is-open",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      aria-hidden="true"
-                    />
-                  </span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="mountain-picker-menu"
-                align="start"
-                sideOffset={-4}
-              >
-                {mountainOptions.map((mountain) => (
-                  <DropdownMenuItem
-                    key={mountain.slug}
-                    className={
-                      mountain.slug === mountainSlug
-                        ? "mountain-picker-option selected"
-                        : "mountain-picker-option"
-                    }
-                    onSelect={() => {
-                      if (mountain.slug !== mountainSlug) {
-                        router.push(`/hike/${mountain.slug}`);
-                      }
-                    }}
-                  >
-                    <MountainOptionCard mountain={mountain} />
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-=======
             <>
               <button
                 type="button"
@@ -337,7 +250,6 @@ export function ExpeditionSidebar({
                 </div>
               )}
             </>
->>>>>>> 9816b8fe510978f7d583f633c7e69aa008eff9d9
           )}
         </section>
 
