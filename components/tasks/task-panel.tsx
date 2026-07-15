@@ -34,23 +34,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   addSoftHyphens,
-  formatTaskFocusTime,
   isTaskVisibleInFrontendHistory,
 } from "@/lib/tasks/task";
 import type {
   CreateTaskInput,
   Task,
-  TaskFocusSession,
   TaskStatus,
   UpdateTaskInput,
 } from "@/types/task";
 
+const MAX_ACTIVE_TASKS = 10;
+
 type TaskPanelProps = {
   tasks: readonly Task[];
-  sessions: readonly TaskFocusSession[];
-  selectedTaskId: string | null;
-  selectionLocked: boolean;
-  onSelect: (taskId: string | null) => void;
   onCreate: (input: CreateTaskInput) => Task;
   onUpdate: (taskId: string, input: UpdateTaskInput) => void;
   onDelete: (taskId: string) => void;
@@ -91,15 +87,10 @@ function SortableTask({
 const statusLabel: Record<TaskStatus, string> = {
   active: "Active",
   completed: "Completed",
-  archived: "Archived",
 };
 
 export function TaskPanel({
   tasks,
-  sessions,
-  selectedTaskId,
-  selectionLocked,
-  onSelect,
   onCreate,
   onUpdate,
   onDelete,
@@ -136,11 +127,7 @@ export function TaskPanel({
     () => historicalTasks.filter((task) => task.status === "completed"),
     [historicalTasks],
   );
-  const archivedTasks = useMemo(
-    () => historicalTasks.filter((task) => task.status === "archived"),
-    [historicalTasks],
-  );
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null;
+  const activeTaskLimitReached = activeTasks.length >= MAX_ACTIVE_TASKS;
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 60_000);
@@ -160,8 +147,7 @@ export function TaskPanel({
     if (editingId) {
       onUpdate(editingId, { title, description });
     } else {
-      const task = onCreate({ title, description });
-      onSelect(task.id);
+      onCreate({ title, description });
     }
     resetForm();
   };
@@ -189,16 +175,7 @@ export function TaskPanel({
     task: Task,
     dragHandleProps?: React.ComponentProps<typeof Button>,
   ) => (
-    <article
-      key={task.id}
-      className={[
-        "task-card",
-        task.id === selectedTaskId && "selected",
-        task.status === "archived" && "archived",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <article key={task.id} className="task-card">
       <div className="task-card-main">
         {dragHandleProps && (
           <Button
@@ -215,9 +192,7 @@ export function TaskPanel({
           variant="ghost"
           size="sm"
           className="task-select-button"
-          disabled={selectionLocked || task.status !== "active"}
-          aria-pressed={task.id === selectedTaskId}
-          onClick={() => onSelect(task.id === selectedTaskId ? null : task.id)}
+          onClick={() => setViewingTask(task)}
         >
           <span>
             <strong>{task.title}</strong>
@@ -246,7 +221,6 @@ export function TaskPanel({
               {task.status === "active" && (
                 <DropdownMenuItem
                   onSelect={() => {
-                    if (task.id === selectedTaskId) onSelect(null);
                     onUpdate(task.id, { status: "completed" });
                   }}
                 >
@@ -258,23 +232,6 @@ export function TaskPanel({
                   onSelect={() => onUpdate(task.id, { status: "active" })}
                 >
                   Reopen task
-                </DropdownMenuItem>
-              )}
-              {task.status !== "archived" && (
-                <DropdownMenuItem
-                  onSelect={() => {
-                    if (task.id === selectedTaskId) onSelect(null);
-                    onUpdate(task.id, { status: "archived" });
-                  }}
-                >
-                  Archive task
-                </DropdownMenuItem>
-              )}
-              {task.status === "archived" && (
-                <DropdownMenuItem
-                  onSelect={() => onUpdate(task.id, { status: "active" })}
-                >
-                  Restore to active
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onSelect={() => beginEdit(task)}>
@@ -290,31 +247,6 @@ export function TaskPanel({
           </DropdownMenu>
         </div>
       </div>
-      {(task.totalFocusSeconds > 0 || task.completedSessionCount > 0) && (
-        <div className="task-metrics">
-          {task.totalFocusSeconds > 0 && (
-            <span>{formatTaskFocusTime(task.totalFocusSeconds)} focused</span>
-          )}
-          {task.completedSessionCount > 0 && (
-            <span>
-              {task.completedSessionCount} session
-              {task.completedSessionCount === 1 ? "" : "s"}
-            </span>
-          )}
-        </div>
-      )}
-      {sessions.some((session) => session.taskId === task.id) && (
-        <p className="task-climbs">
-          Climbs:{" "}
-          {[
-            ...new Set(
-              sessions
-                .filter((session) => session.taskId === task.id)
-                .map((session) => session.mountainName),
-            ),
-          ].join(", ")}
-        </p>
-      )}
     </article>
   );
 
@@ -325,27 +257,24 @@ export function TaskPanel({
     >
       <div className="hud-card-heading">
         <span>☑</span>
-        <strong id="task-panel-heading">Focus task</strong>
-        <small>{activeTasks.length} active</small>
+        <strong id="task-panel-heading">Tasks</strong>
+        <small>
+          {activeTasks.length}/{MAX_ACTIVE_TASKS} active
+        </small>
       </div>
       <p className="task-intro">
-        {selectedTask
-          ? `Next summit will count toward “${selectedTask.title}”.`
-          : "Choose a task to give this expedition a goal."}
+        Keep your expedition checklist simple: active or completed.
       </p>
       <div className="task-selection-row">
         <Button
-          variant="ghost"
-          size="sm"
-          className={selectedTask ? "task-current selected" : "task-current"}
-          disabled={selectionLocked}
-          onClick={() => onSelect(null)}
-        >
-          {selectedTask ? selectedTask.title : "No task selected"}
-        </Button>
-        <Button
           size="sm"
           className="task-new-button"
+          disabled={activeTaskLimitReached}
+          title={
+            activeTaskLimitReached
+              ? "Complete or delete a task before creating another."
+              : undefined
+          }
           onClick={() => {
             setEditingId(null);
             setTitle("");
@@ -356,6 +285,12 @@ export function TaskPanel({
           + New
         </Button>
       </div>
+      {activeTaskLimitReached && (
+        <p className="task-limit-notice">
+          You have reached the 10-task limit. Complete or delete a task to add
+          another.
+        </p>
+      )}
       <Dialog
         open={showForm}
         onOpenChange={(open) => {
@@ -374,7 +309,7 @@ export function TaskPanel({
                 value={title}
                 maxLength={120}
                 autoFocus
-                placeholder="Finish portfolio landing page"
+                placeholder="Enter a task title..."
                 onChange={(event) => setTitle(event.target.value)}
               />
             </label>
@@ -384,7 +319,7 @@ export function TaskPanel({
                 value={description}
                 maxLength={1_000}
                 rows={2}
-                placeholder="What does done look like?"
+                placeholder="Describe the task..."
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
@@ -420,39 +355,6 @@ export function TaskPanel({
             <DialogDescription>
               {viewingTask.description || "No description added yet."}
             </DialogDescription>
-            {(viewingTask.totalFocusSeconds > 0 ||
-              viewingTask.completedSessionCount > 0) && (
-              <div className="task-view-metrics">
-                {viewingTask.totalFocusSeconds > 0 && (
-                  <div>
-                    <small>Focus time</small>
-                    <strong>
-                      {formatTaskFocusTime(viewingTask.totalFocusSeconds)}
-                    </strong>
-                  </div>
-                )}
-                {viewingTask.completedSessionCount > 0 && (
-                  <div>
-                    <small>Completed sessions</small>
-                    <strong>{viewingTask.completedSessionCount}</strong>
-                  </div>
-                )}
-              </div>
-            )}
-            {sessions.some((session) => session.taskId === viewingTask.id) && (
-              <div className="task-view-climbs">
-                <small>Contributing climbs</small>
-                <p>
-                  {[
-                    ...new Set(
-                      sessions
-                        .filter((session) => session.taskId === viewingTask.id)
-                        .map((session) => session.mountainName),
-                    ),
-                  ].join(", ")}
-                </p>
-              </div>
-            )}
             <Button
               variant="secondary"
               size="sm"
@@ -489,7 +391,6 @@ export function TaskPanel({
                 size="sm"
                 className="task-delete-confirm"
                 onClick={() => {
-                  if (taskPendingDeletion.id === selectedTaskId) onSelect(null);
                   onDelete(taskPendingDeletion.id);
                   setTaskPendingDeletion(null);
                 }}
@@ -553,19 +454,6 @@ export function TaskPanel({
                   </div>
                   <div className="task-list">
                     {completedTasks.map((task) => renderTask(task))}
-                  </div>
-                </section>
-              )}
-              {archivedTasks.length > 0 && (
-                <section className="task-history-group archived">
-                  <div className="task-history-heading">
-                    <span>▣</span>
-                    <strong>Archive</strong>
-                    <small>{archivedTasks.length}</small>
-                  </div>
-                  <p>Stored away from your active expedition plan.</p>
-                  <div className="task-list">
-                    {archivedTasks.map((task) => renderTask(task))}
                   </div>
                 </section>
               )}

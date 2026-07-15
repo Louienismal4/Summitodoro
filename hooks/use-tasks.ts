@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase/client";
 import type {
   CreateTaskInput,
   Task,
-  TaskFocusSession,
   TaskStatus,
   UpdateTaskInput,
 } from "@/types/task";
@@ -17,7 +16,6 @@ const STORAGE_KEY = "summitodoro:tasks";
 type StoredTaskState = {
   tasks: Task[];
   completedSessionIds: string[];
-  sessions: TaskFocusSession[];
 };
 
 type DatabaseTask = {
@@ -26,8 +24,6 @@ type DatabaseTask = {
   title: string;
   description: string | null;
   status: TaskStatus;
-  total_focus_seconds: number;
-  completed_session_count: number;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -40,8 +36,6 @@ const toTask = (task: DatabaseTask): Task => ({
   title: task.title,
   description: task.description,
   status: task.status,
-  totalFocusSeconds: task.total_focus_seconds,
-  completedSessionCount: task.completed_session_count,
   sortOrder: task.sort_order,
   createdAt: task.created_at,
   updatedAt: task.updated_at,
@@ -52,7 +46,6 @@ export const useTasks = () => {
   const [state, setState] = useState<StoredTaskState>({
     tasks: [],
     completedSessionIds: [],
-    sessions: [],
   });
   const [hydrated, setHydrated] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -66,7 +59,6 @@ export const useTasks = () => {
       setState({
         tasks: parsed.tasks,
         completedSessionIds: parsed.completedSessionIds,
-        sessions: parsed.sessions,
       });
     }
     setHydrated(true);
@@ -92,7 +84,7 @@ export const useTasks = () => {
       const { data: remoteTasks } = await supabase
         .from("tasks")
         .select(
-          "id, user_id, title, description, status, total_focus_seconds, completed_session_count, sort_order, created_at, updated_at, completed_at",
+          "id, user_id, title, description, status, sort_order, created_at, updated_at, completed_at",
         )
         .order("sort_order")
         .order("created_at");
@@ -118,14 +110,28 @@ export const useTasks = () => {
           ) + 1,
       };
       setState((current) => ({ ...current, tasks: [task, ...current.tasks] }));
-      if (accountId && supabase) {
-        void supabase.from("tasks").insert({
-          id: task.id,
-          user_id: accountId,
-          title: task.title,
-          description: task.description,
-          sort_order: task.sortOrder,
-        });
+      if (supabase) {
+        void (async () => {
+          let userId = accountId;
+          if (!userId) {
+            const { data, error } = await supabase.auth.getUser();
+            if (error || !data.user) {
+              console.error("Unable to save task: no signed-in user.", error);
+              return;
+            }
+            userId = data.user.id;
+            setAccountId(userId);
+          }
+
+          const { error } = await supabase.from("tasks").insert({
+            id: task.id,
+            user_id: userId,
+            title: task.title,
+            description: task.description,
+            sort_order: task.sortOrder,
+          });
+          if (error) console.error("Unable to save task.", error);
+        })();
       }
       return task;
     },
@@ -172,62 +178,6 @@ export const useTasks = () => {
     [accountId],
   );
 
-  const recordCompletedSession = useCallback(
-    ({
-      sessionId,
-      taskId,
-      durationSeconds,
-      mountainId,
-      mountainName,
-    }: {
-      sessionId: string;
-      taskId: string;
-      durationSeconds: number;
-      mountainId: string;
-      mountainName: string;
-    }) => {
-      setState((current) => {
-        if (current.completedSessionIds.includes(sessionId)) return current;
-        return {
-          completedSessionIds: [
-            ...current.completedSessionIds,
-            sessionId,
-          ].slice(-500),
-          sessions: [
-            ...current.sessions,
-            {
-              sessionId,
-              taskId,
-              mountainId,
-              mountainName,
-              durationSeconds,
-              completedAt: new Date().toISOString(),
-            },
-          ].slice(-500),
-          tasks: current.tasks.map((task) =>
-            task.id === taskId
-              ? {
-                  ...task,
-                  totalFocusSeconds: task.totalFocusSeconds + durationSeconds,
-                  completedSessionCount: task.completedSessionCount + 1,
-                  updatedAt: new Date().toISOString(),
-                }
-              : task,
-          ),
-        };
-      });
-      if (accountId && supabase) {
-        void supabase.rpc("record_completed_task_focus_session", {
-          p_session_id: sessionId,
-          p_task_id: taskId,
-          p_mountain_id: mountainId,
-          p_duration_seconds: durationSeconds,
-        });
-      }
-    },
-    [accountId],
-  );
-
   const reorderActiveTasks = useCallback(
     (taskIds: readonly string[]) => {
       setState((current) => ({
@@ -247,23 +197,12 @@ export const useTasks = () => {
   return useMemo(
     () => ({
       tasks: state.tasks,
-      sessions: state.sessions,
       hydrated,
       create,
       update,
       remove,
-      recordCompletedSession,
       reorderActiveTasks,
     }),
-    [
-      create,
-      hydrated,
-      recordCompletedSession,
-      reorderActiveTasks,
-      remove,
-      state.sessions,
-      state.tasks,
-      update,
-    ],
+    [create, hydrated, reorderActiveTasks, remove, state.tasks, update],
   );
 };

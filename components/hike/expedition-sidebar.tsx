@@ -50,9 +50,6 @@ type ExpeditionSidebarProps = {
   onEditProfile: () => void;
   onRequestUnlock: (mountain: MountainOption) => void;
   tasks: readonly Task[];
-  taskSessions: readonly import("@/types/task").TaskFocusSession[];
-  selectedTaskId: string | null;
-  onSelectTask: (taskId: string | null) => void;
   onCreateTask: (input: CreateTaskInput) => Task;
   onUpdateTask: (taskId: string, input: UpdateTaskInput) => void;
   onDeleteTask: (taskId: string) => void;
@@ -120,9 +117,6 @@ export function ExpeditionSidebar({
   onEditProfile,
   onRequestUnlock,
   tasks,
-  taskSessions,
-  selectedTaskId,
-  onSelectTask,
   onCreateTask,
   onUpdateTask,
   onDeleteTask,
@@ -303,10 +297,6 @@ export function ExpeditionSidebar({
 
         <TaskPanel
           tasks={tasks}
-          sessions={taskSessions}
-          selectedTaskId={selectedTaskId}
-          selectionLocked={status !== "idle"}
-          onSelect={onSelectTask}
           onCreate={onCreateTask}
           onUpdate={onUpdateTask}
           onDelete={onDeleteTask}
@@ -327,9 +317,6 @@ export function ExpeditionSidebar({
           onResume={onResume}
           onReset={onReset}
           onDurationChange={onDurationChange}
-          taskLabel={
-            tasks.find((task) => task.id === selectedTaskId)?.title ?? null
-          }
         />
 
         <section className="hud-card music-panel" data-tour="music-player">

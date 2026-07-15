@@ -4,7 +4,6 @@ import type { FocusSession, PersistedFocusSession } from "@/types/session";
 
 const sessionSchema = z.object({
   id: z.string().min(1),
-  taskId: z.string().uuid().nullable().optional(),
   durationMs: z.number().int().positive(),
   startedAt: z.number().nonnegative().nullable(),
   pausedAt: z.number().nonnegative().nullable(),
@@ -25,10 +24,8 @@ const clamp = (value: number, minimum: number, maximum: number) =>
 export const createFocusSession = (
   durationMs: number,
   id = crypto.randomUUID(),
-  taskId: string | null = null,
 ): FocusSession => ({
   id,
-  taskId,
   durationMs,
   startedAt: null,
   pausedAt: null,
@@ -108,15 +105,8 @@ export const parsePersistedSession = (
     return {
       ...parsed,
       version: 2,
-      session: { ...parsed.session, taskId: parsed.session.taskId ?? null },
     };
   } catch {
     return null;
   }
 };
-
-export const setSessionTask = (
-  session: FocusSession,
-  taskId: string | null,
-): FocusSession =>
-  session.status === "idle" ? { ...session, taskId } : session;

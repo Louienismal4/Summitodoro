@@ -3,14 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   addSoftHyphens,
   createTask,
-  formatTaskFocusTime,
   isTaskVisibleInFrontendHistory,
   parseStoredTasks,
   updateTask,
 } from "@/lib/tasks/task";
 
 describe("tasks", () => {
-  it("creates a trimmed active task with zeroed focus totals", () => {
+  it("creates a trimmed active task", () => {
     const task = createTask(
       {
         title: "  Finish landing page  ",
@@ -25,8 +24,6 @@ describe("tasks", () => {
       title: "Finish landing page",
       description: "Ship hero section.",
       status: "active",
-      totalFocusSeconds: 0,
-      completedSessionCount: 0,
     });
   });
 
@@ -46,16 +43,11 @@ describe("tasks", () => {
     expect(updateTask(completed, { status: "active" }).completedAt).toBeNull();
   });
 
-  it("recovers legacy task storage that has no contribution history", () => {
+  it("recovers legacy task storage without retaining contribution history", () => {
     const parsed = parseStoredTasks(
       JSON.stringify({ version: 1, tasks: [], completedSessionIds: [] }),
     );
-    expect(parsed?.sessions).toEqual([]);
-  });
-
-  it("formats accumulated focus time for compact task cards", () => {
-    expect(formatTaskFocusTime(5_400)).toBe("1h 30m");
-    expect(formatTaskFocusTime(1_200)).toBe("20m");
+    expect(parsed?.tasks).toEqual([]);
   });
 
   it("keeps historical tasks visible in the UI only for their local calendar day", () => {

@@ -1,4 +1,4 @@
-export type TaskStatus = "active" | "completed" | "archived";
+export type TaskStatus = "active" | "completed";
 
 export type Task = {
   id: string;
@@ -6,8 +6,6 @@ export type Task = {
   title: string;
   description: string | null;
   status: TaskStatus;
-  totalFocusSeconds: number;
-  completedSessionCount: number;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -23,13 +21,4 @@ export type UpdateTaskInput = {
   title?: string;
   description?: string;
   status?: TaskStatus;
-};
-
-export type TaskFocusSession = {
-  sessionId: string;
-  taskId: string;
-  mountainId: string;
-  mountainName: string;
-  durationSeconds: number;
-  completedAt: string;
 };

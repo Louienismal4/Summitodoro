@@ -66,17 +66,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   );
 
   useEffect(() => {
-    if (focus.session.status !== "completed" || !focus.session.taskId) return;
-    tasks.recordCompletedSession({
-      sessionId: focus.session.id,
-      taskId: focus.session.taskId,
-      durationSeconds: Math.floor(focus.session.durationMs / 1_000),
-      mountainId: mountain.id,
-      mountainName: mountain.name,
-    });
-  }, [focus.session, mountain.id, mountain.name, tasks]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     void fetch(mountain.trailAssetUrl, { signal: controller.signal })
@@ -179,9 +168,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         onEditProfile={() => setShowProfileEditor(true)}
         onRequestUnlock={requestUnlock}
         tasks={tasks.tasks}
-        taskSessions={tasks.sessions}
-        selectedTaskId={focus.session.taskId}
-        onSelectTask={focus.setTask}
         onCreateTask={tasks.create}
         onUpdateTask={tasks.update}
         onDeleteTask={tasks.remove}
@@ -281,60 +267,65 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
               complete
             </strong>
           </div>
-          <div
-            className="checkpoint-route"
-            style={{
-              gridTemplateColumns: `repeat(${mountain.checkpoints.length + 2}, minmax(0, 1fr))`,
-            }}
-          >
-            <button
-              type="button"
-              className="checkpoint-node reached"
-              aria-label={`Trailhead: unlocks at 00:00:00 elapsed, ${formatRemainingTime(focus.session.durationMs)} left`}
+          <div className="checkpoint-dock-content">
+            <div
+              className="checkpoint-route"
+              style={{
+                gridTemplateColumns: `repeat(${mountain.checkpoints.length + 2}, minmax(0, 1fr))`,
+              }}
             >
-              <span>✓</span>
-              <small>Trailhead</small>
-              <span className="checkpoint-tooltip" role="tooltip">
-                Unlocks at 00:00:00 elapsed ·{" "}
-                {formatRemainingTime(focus.session.durationMs)} left
-              </span>
-            </button>
-            {timedMilestones.map((milestone) => {
-              const reached = focus.reachedCheckpointIds.includes(milestone.id);
-              return (
-                <button
-                  key={milestone.id}
-                  type="button"
-                  className={
-                    reached ? "checkpoint-node reached" : "checkpoint-node"
-                  }
-                  aria-label={`${milestone.name}: unlocks at ${formatRemainingTime(milestone.elapsedMs)} elapsed, ${formatRemainingTime(milestone.remainingMs)} left`}
-                >
-                  <span>{reached ? "✓" : "+25"}</span>
-                  <small>{milestone.name}</small>
-                  <span className="checkpoint-tooltip" role="tooltip">
-                    Unlocks at {formatRemainingTime(milestone.elapsedMs)}{" "}
-                    elapsed · {formatRemainingTime(milestone.remainingMs)} left
-                  </span>
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              className={
-                focus.session.status === "completed"
-                  ? "checkpoint-node reached summit"
-                  : "checkpoint-node summit"
-              }
-              aria-label={`Summit: unlocks at ${formatRemainingTime(focus.session.durationMs)} elapsed, 00:00:00 left`}
-            >
-              <span>{focus.session.status === "completed" ? "✓" : "▲"}</span>
-              <small>Summit</small>
-              <span className="checkpoint-tooltip" role="tooltip">
-                Unlocks at {formatRemainingTime(focus.session.durationMs)}{" "}
-                elapsed · 00:00:00 left
-              </span>
-            </button>
+              <button
+                type="button"
+                className="checkpoint-node reached"
+                aria-label={`Trailhead: unlocks at 00:00:00 elapsed, ${formatRemainingTime(focus.session.durationMs)} left`}
+              >
+                <span>✓</span>
+                <small>Trailhead</small>
+                <span className="checkpoint-tooltip" role="tooltip">
+                  Unlocks at 00:00:00 elapsed ·{" "}
+                  {formatRemainingTime(focus.session.durationMs)} left
+                </span>
+              </button>
+              {timedMilestones.map((milestone) => {
+                const reached = focus.reachedCheckpointIds.includes(
+                  milestone.id,
+                );
+                return (
+                  <button
+                    key={milestone.id}
+                    type="button"
+                    className={
+                      reached ? "checkpoint-node reached" : "checkpoint-node"
+                    }
+                    aria-label={`${milestone.name}: unlocks at ${formatRemainingTime(milestone.elapsedMs)} elapsed, ${formatRemainingTime(milestone.remainingMs)} left`}
+                  >
+                    <span>{reached ? "✓" : "+25"}</span>
+                    <small>{milestone.name}</small>
+                    <span className="checkpoint-tooltip" role="tooltip">
+                      Unlocks at {formatRemainingTime(milestone.elapsedMs)}{" "}
+                      elapsed · {formatRemainingTime(milestone.remainingMs)}{" "}
+                      left
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className={
+                  focus.session.status === "completed"
+                    ? "checkpoint-node reached summit"
+                    : "checkpoint-node summit"
+                }
+                aria-label={`Summit: unlocks at ${formatRemainingTime(focus.session.durationMs)} elapsed, 00:00:00 left`}
+              >
+                <span>{focus.session.status === "completed" ? "✓" : "▲"}</span>
+                <small>Summit</small>
+                <span className="checkpoint-tooltip" role="tooltip">
+                  Unlocks at {formatRemainingTime(focus.session.durationMs)}{" "}
+                  elapsed · 00:00:00 left
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -345,7 +336,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
               role="dialog"
               aria-label="Map and route attribution"
             >
-              <strong>Map & route information</strong>
               <p>{mountain.source.attribution}</p>
               <p>
                 <b>Virtual focus route only.</b> Not for real-world navigation
@@ -425,14 +415,6 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
               Your focused ascent of {mountain.name} is complete. Rewards have
               been added to your local hiker profile.
             </p>
-            {focus.session.taskId && (
-              <p className="completion-task-note">
-                Focus time added to{" "}
-                {tasks.tasks.find((task) => task.id === focus.session.taskId)
-                  ?.title ?? "your selected task"}
-                .
-              </p>
-            )}
             <div className="reward-breakdown">
               <div>
                 <small>Focus XP</small>

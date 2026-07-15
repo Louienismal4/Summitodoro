@@ -2420,6 +2420,10 @@ a {
     bottom: 62px;
     width: auto;
   }
+  .map-duration-dock {
+    left: 12px;
+    bottom: 18px;
+  }
   .map-safety-notice {
     right: 12px;
     bottom: 12px;
@@ -2872,8 +2876,12 @@ body:has(.game-shell) {
   transform: translateY(2px) rotate(225deg);
 }
 .mountain-picker-menu {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 0;
   z-index: 30;
-  width: var(--radix-dropdown-menu-trigger-width);
+  width: 100%;
+  box-sizing: border-box;
   max-height: min(520px, 70vh);
   padding: 6px;
   display: grid;
@@ -3150,13 +3158,13 @@ body:has(.game-shell) {
   background-size: cover;
 }
 .checkpoint-dock {
-  bottom: 80px;
+  bottom: 18px;
 }
 .map-duration-dock {
   position: absolute;
   z-index: 7;
   left: 18px;
-  bottom: 18px;
+  bottom: 184px;
   padding: 8px;
   display: flex;
   align-items: center;
@@ -3200,15 +3208,15 @@ body:has(.game-shell) {
   position: absolute;
   z-index: 8;
   right: 18px;
-  bottom: 42px;
+  bottom: 20px;
   display: grid;
   justify-items: end;
   gap: 8px;
 }
 .attribution-button {
-  width: 38px;
-  height: 38px;
-  border: 3px solid white;
+  width: 30px;
+  height: 30px;
+  border: 2px solid white;
   border-radius: 50%;
   color: white;
   background: #111713;
@@ -3223,9 +3231,6 @@ body:has(.game-shell) {
   border-radius: 7px;
   background: rgba(255, 255, 253, 0.97);
   box-shadow: 0 8px 28px rgba(24, 36, 28, 0.14);
-}
-.attribution-dialog strong {
-  font-size: 10px;
 }
 .attribution-dialog p {
   margin: 7px 0;
@@ -3480,6 +3485,12 @@ body:has(.game-shell) {
 .task-history-toggle {
   color: #707870;
   font-size: 9px;
+}
+.task-limit-notice {
+  margin: -3px 0 2px;
+  color: #88734a;
+  font-size: 8px;
+  line-height: 1.4;
 }
 .task-list {
   display: grid;

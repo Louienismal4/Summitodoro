@@ -10,7 +10,6 @@ import {
   parsePersistedSession,
   pauseSession,
   resumeSession,
-  setSessionTask,
   startSession,
 } from "@/lib/timer/focus-session";
 import { getShortBreakDurationMs } from "@/lib/timer/milestones";
@@ -172,10 +171,6 @@ export const useFocusSession = ({
     previousProgress.current = 0;
   }, []);
 
-  const setTask = useCallback((taskId: string | null) => {
-    setSession((current) => setSessionTask(current, taskId));
-  }, []);
-
   const dismissCheckpoint = useCallback(() => setLatestCheckpoint(null), []);
 
   return useMemo(
@@ -194,7 +189,6 @@ export const useFocusSession = ({
       resume,
       reset,
       setDuration,
-      setTask,
       dismissCheckpoint,
     }),
     [
@@ -210,7 +204,6 @@ export const useFocusSession = ({
       resume,
       session,
       setDuration,
-      setTask,
       start,
     ],
   );

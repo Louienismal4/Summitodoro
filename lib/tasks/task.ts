@@ -7,7 +7,7 @@ import type {
   UpdateTaskInput,
 } from "@/types/task";
 
-const taskStatusSchema = z.enum(["active", "completed", "archived"]);
+const taskStatusSchema = z.enum(["active", "completed"]);
 
 const taskSchema = z.object({
   id: z.string().uuid(),
@@ -15,8 +15,6 @@ const taskSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().max(1_000).nullable(),
   status: taskStatusSchema,
-  totalFocusSeconds: z.number().int().nonnegative(),
-  completedSessionCount: z.number().int().nonnegative(),
   sortOrder: z.number().int().nonnegative().default(0),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -27,18 +25,6 @@ const storedTasksSchema = z.object({
   version: z.literal(1),
   tasks: z.array(taskSchema),
   completedSessionIds: z.array(z.string().uuid()),
-  sessions: z
-    .array(
-      z.object({
-        sessionId: z.string().uuid(),
-        taskId: z.string().uuid(),
-        mountainId: z.string(),
-        mountainName: z.string(),
-        durationSeconds: z.number().int().positive(),
-        completedAt: z.string().datetime(),
-      }),
-    )
-    .default([]),
 });
 
 export type StoredTasks = z.infer<typeof storedTasksSchema>;
@@ -74,8 +60,6 @@ export const createTask = (
     title: task.title,
     description: task.description ?? null,
     status: "active",
-    totalFocusSeconds: 0,
-    completedSessionCount: 0,
     sortOrder: 0,
     createdAt: now,
     updatedAt: now,
@@ -104,12 +88,6 @@ export const updateTask = (
     updatedAt: now,
     completedAt: status === "completed" ? (task.completedAt ?? now) : null,
   };
-};
-
-export const formatTaskFocusTime = (totalFocusSeconds: number) => {
-  const hours = Math.floor(totalFocusSeconds / 3_600);
-  const minutes = Math.floor((totalFocusSeconds % 3_600) / 60);
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 };
 
 export const isTaskVisibleInFrontendHistory = (
