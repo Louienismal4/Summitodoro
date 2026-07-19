@@ -12,3 +12,10 @@ supabase/*
 !supabase/migrations/*
 !supabase/migrations/*.sql
 *.md
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
