@@ -1,6 +1,14 @@
 terraform {
   required_version = ">= 1.15.0"
 
+  backend "s3" {
+    bucket       = "summitodoro-tf-state-656032436311-ap-southeast-1"
+    key          = "environments/development/terraform.tfstate"
+    region       = "ap-southeast-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
