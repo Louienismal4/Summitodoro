@@ -14,16 +14,21 @@ const releases = [
     title: "Task-focused expeditions",
     categories: {
       added: [
+        "A Follow Hiker map control that can resume camera tracking after manual exploration.",
+        "Production caching for the app shell, trail data, map styles, map tiles, and static mountain assets.",
         "Task planning with optional descriptions, task selection before an expedition, focus totals, completed-session counts, and contributing-climb history.",
         "Task history retention: completed and archived tasks remain visible for the current day, with 30-day backend cleanup during authenticated sync.",
         "Drag handles for prioritizing active tasks, with saved task ordering for signed-in hikers.",
         "Task view, edit, archive, restore, and delete-confirmation flows using themed shadcn controls.",
       ],
       changed: [
+        "Trail progress now renders as three distinct layers: a high-contrast casing, the incomplete route, and the completed route.",
+        "Camera following is throttled for smoother map updates and stops when hikers drag, zoom, touch, or use map navigation controls.",
         "Refined the focus-task dashboard with compact history controls, an ellipsis action menu, and resilient long-text handling.",
         "Successful mountain unlocks now celebrate with a reduced-motion-safe confetti burst.",
       ],
       fixed: [
+        "Kept the interactive trail and timer available on a lightweight local map when the external map provider is slow or unavailable.",
         "Prevented long task titles, descriptions, and climb labels from stretching the expedition sidebar or task-view dialog.",
       ],
     },

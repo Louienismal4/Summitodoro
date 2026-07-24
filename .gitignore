@@ -4,14 +4,23 @@ out/
 coverage/
 playwright-report/
 test-results/
+*.log
+*.tmp
+*.temp
+*.cache
+*.swp
+*.bak
+*_old.*
+*_backup.*
+*_copy.*
 .env*
 !.env.example
 *.tsbuildinfo
 .DS_Store
 supabase/*
-!supabase/migrations/*
+!supabase/migrations/
+supabase/migrations/*
 !supabase/migrations/*.sql
-*.md
 # Terraform
 **/.terraform/*
 *.tfstate

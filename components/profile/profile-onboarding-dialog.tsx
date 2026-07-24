@@ -155,7 +155,7 @@ export function ProfileOnboardingDialog({
         <p className="section-kicker">
           {mode === "edit" ? "Hiker profile" : "Welcome to Summitodoro"}
         </p>
-        <DialogTitle id="profile-onboarding-title">
+        <DialogTitle>
           {mode === "edit"
             ? "Edit hiker profile"
             : user

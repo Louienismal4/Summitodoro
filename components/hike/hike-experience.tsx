@@ -19,6 +19,7 @@ import { useTasks } from "@/hooks/use-tasks";
 import { supabase } from "@/lib/supabase/client";
 import { formatRemainingTime } from "@/lib/timer/format-time";
 import { getTimedMilestones } from "@/lib/timer/milestones";
+import { loadTrailAsset } from "@/lib/trail/trail-cache";
 import {
   getCoordinateAtProgress,
   prepareTrail,
@@ -34,6 +35,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   const [showAttribution, setShowAttribution] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [unlockMountain, setUnlockMountain] = useState<Mountain | null>(null);
+  const [isFollowingHiker, setIsFollowingHiker] = useState(true);
   const mapRef = useRef<MountainMapHandle>(null);
 
   useEffect(() => {
@@ -68,13 +70,21 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    void fetch(mountain.trailAssetUrl, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok)
-          throw new Error(`Trail request failed (${response.status}).`);
-        return response.json() as Promise<unknown>;
+    void Promise.resolve()
+      .then(async () => {
+        setTrailError(null);
+        setTrail(null);
+        setMapUnavailable(null);
+        setIsFollowingHiker(true);
+
+        const value = await loadTrailAsset(
+          mountain.trailAssetUrl,
+          controller.signal,
+        );
+        if (!controller.signal.aborted) {
+          setTrail(prepareTrail(validateTrailFeature(value)));
+        }
       })
-      .then((value) => setTrail(prepareTrail(validateTrailFeature(value))))
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
@@ -190,6 +200,7 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
             reachedCheckpointIds={focus.reachedCheckpointIds}
             hikerAvatarUrl={game.profile.avatarUrl}
             navigationBounds={mountain.mapNavigationBounds}
+            onFollowChange={setIsFollowingHiker}
             onUnavailable={handleMapUnavailable}
           />
         )}
@@ -227,6 +238,17 @@ export function HikeExperience({ mountain }: { mountain: Mountain }) {
         </div>
 
         <div className="map-control-stack" aria-label="Map controls">
+          <button
+            type="button"
+            className={isFollowingHiker ? "is-active" : undefined}
+            onClick={() => mapRef.current?.followHiker()}
+            title="Follow hiker"
+            aria-label="Follow hiker"
+            aria-pressed={isFollowingHiker}
+          >
+            <span>◎</span>
+            <small>Follow</small>
+          </button>
           <button
             type="button"
             onClick={() => mapRef.current?.resetCamera()}

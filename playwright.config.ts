@@ -16,7 +16,7 @@ export default defineConfig({
   webServer: {
     command: "npm run test:e2e:server",
     url: "http://localhost:3100",
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
     env: {
       ...process.env,
       NEXT_PUBLIC_MAP_STYLE_URL: "https://tiles.openfreemap.org/styles/liberty",

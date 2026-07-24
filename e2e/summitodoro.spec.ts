@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
+test.beforeEach(async ({ page }, testInfo) => {
+  await page.addInitScript((hasCompletedProfile) => {
+    window.localStorage.setItem("summitodoro:tour-complete", "true");
+    if (!hasCompletedProfile) {
+      window.localStorage.removeItem("summitodoro:expedition-profile");
+      return;
+    }
     window.localStorage.setItem(
       "summitodoro:expedition-profile",
       JSON.stringify({
@@ -19,13 +24,10 @@ test.beforeEach(async ({ page }) => {
         lifetimeTrailCoinsSpent: 0,
       }),
     );
-  });
+  }, testInfo.title !== "onboards a new hiker profile");
 });
 
 test("onboards a new hiker profile", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.removeItem("summitodoro:expedition-profile");
-  });
   await page.goto("/");
 
   const dialog = page.getByRole("dialog", {
@@ -139,7 +141,7 @@ test("starts, pauses, and restores a session after refresh", async ({
   await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
 });
 
-test("keeps timer controls available when the map provider fails", async ({
+test("keeps the trail map and timer available when the provider fails", async ({
   page,
 }) => {
   await page.route("https://tiles.openfreemap.org/**", (route) =>
@@ -150,8 +152,78 @@ test("keeps timer controls available when the map provider fails", async ({
     page.getByRole("button", { name: "Deploy hiker" }),
   ).toBeEnabled();
   await expect(
-    page.getByRole("img", { name: /Virtual trail progress/ }),
+    page.locator(
+      '.map-canvas[data-trail-layers="casing incomplete completed"]',
+    ),
   ).toBeVisible();
+});
+
+test("stops following after manual map movement and resumes on request", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const map = page.locator(
+    '.map-canvas[data-trail-layers="casing incomplete completed"]',
+  );
+  const follow = page.getByRole("button", { name: "Follow hiker" });
+  await expect(map).toBeVisible();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+
+  const canvas = page.locator(".maplibregl-canvas");
+  await canvas.dispatchEvent("mousedown", {
+    button: 0,
+    buttons: 1,
+    clientX: 120,
+    clientY: 120,
+  });
+
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect(map).toHaveAttribute("data-camera-following", "false");
+  await follow.dispatchEvent("click");
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(map).toHaveAttribute("data-camera-following", "true");
+
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+});
+
+test("reloads the cached trail experience while offline", async ({
+  context,
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === "mobile",
+    "Playwright WebKit cannot reliably reload a page in offline mode.",
+  );
+
+  await page.goto("/");
+  await expect(
+    page.locator(
+      '.map-canvas[data-trail-layers="casing incomplete completed"]',
+    ),
+  ).toBeVisible();
+  await page.evaluate(() => navigator.serviceWorker.ready);
+
+  // Reload once under service-worker control so route chunks and the
+  // dynamically imported map runtime enter the runtime cache.
+  await page.reload();
+  await expect(page.locator(".maplibregl-canvas")).toBeVisible();
+
+  await context.setOffline(true);
+  try {
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(
+        '.map-canvas[data-trail-layers="casing incomplete completed"]',
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Deploy hiker" }),
+    ).toBeEnabled();
+  } finally {
+    await context.setOffline(false);
+  }
 });
 
 test("recovers an elapsed session directly at the summit", async ({ page }) => {

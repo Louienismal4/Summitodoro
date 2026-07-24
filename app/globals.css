@@ -3085,7 +3085,8 @@ body:has(.game-shell) {
   border-right: 0;
 }
 .map-control-stack button:hover,
-.map-control-stack button.active {
+.map-control-stack button.active,
+.map-control-stack button.is-active {
   color: #078f49;
   background: #e8f6ed;
 }
