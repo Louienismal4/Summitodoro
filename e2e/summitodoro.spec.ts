@@ -137,6 +137,26 @@ test("skips the entrance for invalid transition parameters", async ({
   ).toBeVisible();
 });
 
+test("keeps the changelog logo contained without covering navigation", async ({
+  page,
+}) => {
+  await page.goto("/changelog");
+
+  const logo = page.getByRole("img", { name: "Summitodoro" });
+  const navigation = page.getByRole("navigation", { name: "Site navigation" });
+
+  await expect(logo).toBeVisible();
+  await expect(navigation).toBeVisible();
+
+  const logoBox = await logo.boundingBox();
+  const navigationBox = await navigation.boundingBox();
+
+  expect(logoBox).not.toBeNull();
+  expect(navigationBox).not.toBeNull();
+  expect(logoBox!.width).toBeLessThanOrEqual(190);
+  expect(logoBox!.x + logoBox!.width).toBeLessThan(navigationBox!.x);
+});
+
 test("explains locked mountain requirements while retaining timer controls", async ({
   page,
 }) => {

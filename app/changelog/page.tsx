@@ -104,8 +104,8 @@ export default function ChangelogPage() {
             className="info-brand-logo"
             src="/summitodoro-logo.svg"
             alt="Summitodoro"
-            width={1200}
-            height={700}
+            width={900}
+            height={180}
             priority
           />
         </Link>
