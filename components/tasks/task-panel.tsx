@@ -447,7 +447,6 @@ export function TaskPanel({
             <div className="task-history-groups">
               {completedTasks.length > 0 && (
                 <section className="task-history-group">
-                  w{" "}
                   <div className="task-history-heading">
                     <span>✓</span>
                     <strong>Completed</strong>

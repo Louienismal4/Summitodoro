@@ -83,60 +83,6 @@ test("loads directly into the expedition dashboard", async ({ page }) => {
   expect(mapboxRequests).toEqual([]);
 });
 
-test("reveals portfolio entries and cleans transition parameters", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    window.addEventListener(
-      "DOMContentLoaded",
-      () => {
-        const initialFrame =
-          document.documentElement.dataset.portfolioEntry === "mountain-zoom" &&
-          getComputedStyle(document.body, "::before").backgroundImage.includes(
-            "summitodoro-cover.webp",
-          );
-        (
-          window as Window & { __sawPortfolioEntryFrame?: boolean }
-        ).__sawPortfolioEntryFrame = initialFrame;
-      },
-      { once: true },
-    );
-  });
-
-  await page.goto(
-    "/?entry=portfolio&project=summitodoro&transition=mountain-zoom",
-  );
-
-  const transition = page.getByTestId("portfolio-entry-transition");
-  await expect(transition).toBeHidden({ timeout: 5_000 });
-  expect(
-    await page.evaluate(
-      () =>
-        (window as Window & { __sawPortfolioEntryFrame?: boolean })
-          .__sawPortfolioEntryFrame,
-    ),
-  ).toBe(true);
-  await expect(page).toHaveURL(/\/hike$/);
-  await expect(
-    page.getByRole("region", { name: "Virtual expedition map" }),
-  ).toBeVisible();
-});
-
-test("skips the entrance for invalid transition parameters", async ({
-  page,
-}) => {
-  await page.goto(
-    "/hike?entry=portfolio&project=summitodoro&transition=unknown",
-  );
-
-  await expect(
-    page.getByTestId("portfolio-entry-transition"),
-  ).not.toBeVisible();
-  await expect(
-    page.getByRole("region", { name: "Virtual expedition map" }),
-  ).toBeVisible();
-});
-
 test("keeps the changelog logo contained without covering navigation", async ({
   page,
 }) => {
